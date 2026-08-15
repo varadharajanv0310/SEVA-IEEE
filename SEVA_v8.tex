@@ -13,6 +13,18 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.17}
 \usepackage{url}
+\usepackage[section]{placeins}
+% allow floats to occupy more of a page so section-local placement does not flush pages
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.78}
+\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\dblfloatpagefraction}{0.78}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setcounter{dbltopnumber}{4}
 
 \begin{document}
 
@@ -760,7 +772,8 @@ against its designers' own re-implementation of the attack: SEVA detects
 PoisonedRAG on the ground PoisonedRAG was built to win.
 
 \subsection{Lexical Duplicate Filtering Is Corpus-Fragile}
-\label{subsec:lex} also answers the sharpest objection to a cohesion-based detector: that
+\label{subsec:lex}
+The cross-domain result also answers the sharpest objection to a cohesion-based detector: that
 it merely reimplements the duplicate filtering PoisonedRAG itself tested and dismissed
 (\S7.3 of~\cite{poisonedrag}). Lexical near-duplicate filtering (MinHash~\cite{minhash}) is \emph{corpus-fragile}. On the lexically
 sparse Security corpus it catches the attack ($98\%$), because a matched-FPR threshold can sit
@@ -829,7 +842,7 @@ accumulated over a multi-document retrieval window, inflate the rate at which wh
 Because PoisonedRAG injects five passages per target query, a genuine
 attack lights up several retrieved documents while benign false positives are
 typically isolated; flagging a query only when $\geq\!2$ of its retrieved documents
-gate cuts the benign query-level false-positive rate from $3.15\%$ to
+are flagged cuts the benign query-level false-positive rate from $3.15\%$ to
 $0.90\%$---a $3.5\times$ reduction---while the poison catch rate is unchanged at
 $98\%$.
 

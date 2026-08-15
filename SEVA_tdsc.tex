@@ -15,6 +15,18 @@
 \usetikzlibrary{positioning,arrows.meta,fit,backgrounds,shapes.geometric}
 
 \usepackage{url}
+\usepackage[section]{placeins}
+% allow floats to occupy more of a page so section-local placement does not flush pages
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.78}
+\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\dblfloatpagefraction}{0.78}
+\setcounter{topnumber}{4}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{6}
+\setcounter{dbltopnumber}{4}
 
 \begin{document}
 
@@ -287,29 +299,30 @@ hardware.
 
 \begin{table}[t]
 \centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \caption{The cohesion-detection family and its neighbours. ``Corpus'' marks defenses that score
 documents against the whole knowledge base rather than one retrieval window; ``FPR'' marks those
 reporting a benign false-positive rate at their operating point. The shared assumption in the
 top block is that co-targeted injections are mutually similar---the assumption
 \S\ref{subsec:boundary} delimits.}
 \label{tab:family}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{llcccc}
+\begin{tabular}{llccc}
 \toprule
 Defense & Signal & Corpus & LLM-free & FPR \\
 \midrule
-CleanBase~\cite{cleanbase}   & similarity-graph cliques & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
-SeCon-RAG~\cite{secon}       & centroid tightness + conflict & $\times$ & $\times$ & $\times$ \\
-GRADA~\cite{grada}           & graph centrality rerank & $\times$ & $\checkmark$ & $\times$ \\
+CleanBase~\cite{cleanbase}   & similarity cliques & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+SeCon-RAG~\cite{secon}       & centroid tightness & $\times$ & $\times$ & $\times$ \\
+GRADA~\cite{grada}           & centrality rerank & $\times$ & $\checkmark$ & $\times$ \\
 TrustRAG~\cite{trustrag}     & $k$-means + LLM check & $\times$ & $\times$ & $\times$ \\
-TopoGuard~\cite{topoguard}   & spectral gap of $k$-NN graph & $\times$ & $\checkmark$ & $\checkmark$ \\
-\textbf{SEVA (ours)}         & $K$-NN neighbourhood cohesion & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+TopoGuard~\cite{topoguard}   & $k$-NN spectral gap & $\times$ & $\checkmark$ & $\checkmark$ \\
+\textbf{SEVA (ours)}         & $K$-NN cohesion & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \midrule
-Hubness~\cite{hubness}       & retrieval-frequency outliers & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
-RAGDefender~\cite{ragdefender}& per-window density filter & $\times$ & $\checkmark$ & $\times$ \\
+Hubness~\cite{hubness}       & retrieval frequency & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+RAGDefender~\cite{ragdefender}& per-window density & $\times$ & $\checkmark$ & $\times$ \\
 RobustRAG~\cite{robustrag}   & isolate-then-aggregate & $\times$ & $\times$ & $\times$ \\
-AV Filter~\cite{avfilter}    & decoder attention variance & $\times$ & $\times$ & $\times$ \\
-RAGShield~\cite{ragshield}   & cryptographic provenance & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+AV Filter~\cite{avfilter}    & attention variance & $\times$ & $\times$ & $\times$ \\
+RAGShield~\cite{ragshield}   & provenance & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -668,8 +681,24 @@ latency are additionally reproduced on an RTX 4060 and an Apple M4
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{docs/figures/confidence_interval.png}
-\caption{Zero evasion with its confidence bound. \emph{Left:} $0$ evasions in $25{,}000$ high-encounter trials gives a $95\%$ Wilson upper bound of $0.0154\%$. \emph{Right:} every poison document sits above the frozen $\tau=0.8423$---minimum poison coherence $0.8905$ against a clean mean of $0.7510$---which is why the interval is that tight.}
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=4.1cm, xbar, bar width=4.2mm,
+  xmin=0.70, xmax=1.04, xlabel={\texttt{cluster\_coh}},
+  ytick={0,1,2,3}, y dir=reverse,
+  yticklabels={clean (pure), clean (poisoned), poison (min), poison (mean)},
+  nodes near coords, nodes near coords style={font=\tiny},
+  point meta=explicit symbolic, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[fill=black!12, draw=black!45] coordinates {(0.7510,0) [0.7510] (0.7485,1) [0.7485] (0.8905,2) [0.8905] (0.9951,3) [0.9951]};
+\draw[red!60!black, dashed, thick] (axis cs:0.8423,3.6)
+  -- (axis cs:0.8423,-0.6)
+  node[above, font=\tiny, red!60!black, anchor=south] {frozen $\tau=0.8423$};
+\end{axis}
+\end{tikzpicture}
+\caption{Why zero evasion is not a knife-edge. Every poison document sits above the
+frozen $\tau=0.8423$: the \emph{minimum} poison coherence over the whole run is $0.8905$, against
+a clean mean of $0.7510$, so the gate has margin on its worst case rather than only on average.
+Contaminating the corpus barely moves the clean mean ($0.7510\to0.7485$). Across $25{,}000$
+high-encounter trials this yields $0$ evasions, a $95\%$ Wilson upper bound of $0.0154\%$.}
 \label{fig:ci}
 \end{figure}
 Table~\ref{tab:main} is the central result: SEVA across three adversary tiers,
@@ -811,8 +840,34 @@ Density & Clean coh. & Poison coh. & Gap & SNR \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{docs/figures/scaling.png}
-\caption{Calibration scaling and density-invariance across corpus size. \emph{Left:} realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M---the deviation does not grow with $N$ (Observation~2). \emph{Right:} the cluster-coherence gap per contamination density; the $100$k and $1$M curves are flat, while at $10$k the gap collapses at $1\%$ density. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=3.3cm, xmode=log, log basis x=10,
+  xlabel={clean calibration corpus size $N$}, ylabel={doc-FPR (\%)},
+  xmin=6000, xmax=1.8e6, ymin=0.6, ymax=0.84, xtick={1e4,1e5,1e6},
+  legend pos=north east, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\tiny, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[thick, blue!60!black, mark=*] coordinates {(10000,0.7653) (100000,0.6741) (1000000,0.7008)};
+\addlegendentry{realized}
+\addplot[green!35!black, dash dot, thick, mark=none, domain=6000:1.8e6] {0.69};
+\addlegendentry{$0.69\%$ target}
+\end{axis}
+\end{tikzpicture}
+
+\vspace{0.8ex}
+
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=3.3cm,
+  xlabel={contamination density (\%)}, ylabel={coherence gap},
+  xmin=0, xmax=11, ymin=0.11, ymax=0.33, xtick={1,5,10},
+  legend pos=north west, legend columns=3, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\tiny, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[thick, black!45, mark=square*] coordinates {(1,0.1411) (5,0.2813) (10,0.2789)};
+\addlegendentry{$N=10$k}
+\addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
+\addlegendentry{$N=100$k}
+\addplot[thick, orange!85!black, mark=triangle*] coordinates {(1,0.2454) (5,0.2489)};
+\addlegendentry{$N=1$M}
+\end{axis}
+\end{tikzpicture}
+\caption{Calibration scaling and density-invariance across corpus size. \emph{Top:} realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M---the deviation does not grow with $N$ (Observation~2). \emph{Bottom:} the cluster-coherence gap per contamination density; the $100$k and $1$M curves are flat, while at $10$k the gap collapses at $1\%$ density. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
 \label{fig:scaling}
 \end{figure}
 The deployed threshold $\tau$ is calibrated non-oracle, as the $(1-0.0069)$
@@ -835,11 +890,13 @@ frozen $\tau$ (three seeds at each size; the $1$M point uses the broader corpus 
 \emph{Mechanism.} $\tau$ is an order statistic of the clean-coherence sample, so the gap
 between realized and target FPR is a uniform-convergence quantity. Writing $F$ for the clean
 coherence CDF and $F_n$ for its empirical counterpart over $n$ calibration documents, the
-realized false-positive rate at the plug-in threshold
-$\tau=F_n^{-1}(1-\alpha)$ satisfies
-$|\,\mathrm{FPR}(\tau)-\alpha\,| \le \sup_x |F_n(x)-F(x)|$, and by the
-Dvoretzky--Kiefer--Wolfowitz inequality~\cite{dkw} this is at most
-$\sqrt{\ln(2/\delta)/2n}$ with probability $1-\delta$. The deviation therefore decays as
+realized false-positive rate at the plug-in threshold $\tau=F_n^{-1}(1-\alpha)$ satisfies
+\[
+  \bigl|\mathrm{FPR}(\tau)-\alpha\bigr| \;\le\; \sup_x \bigl|F_n(x)-F(x)\bigr|
+  \;\le\; \bigl(\ln(2/\delta)/2n\bigr)^{1/2}
+\]
+with probability $1-\delta$, the second inequality being the
+Dvoretzky--Kiefer--Wolfowitz bound~\cite{dkw}. The deviation therefore decays as
 $O(1/\sqrt{n})$ in the number of \emph{clean} calibration documents---a property of the
 calibration set alone, independent of the attack. The bound is distribution-free and hence
 loose; we report it for the rate it predicts, which is the trend the three measured points
@@ -855,7 +912,19 @@ not a fitted exponent, and do not extrapolate the rate.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{docs/figures/encoder_invariance.png}
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=4.1cm,
+  xlabel={contamination density (\%)}, ylabel={\texttt{cluster\_coh} gap},
+  xmin=0, xmax=11, ymin=0.09, ymax=0.31, xtick={1,5,10},
+  legend pos=north west, legend columns=1, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
+\addlegendentry{bge-large (SNR $\geq$ 5.93)}
+\addplot[thick, orange!80!black, mark=square*] coordinates {(1,0.1223) (5,0.1246) (10,0.1266)};
+\addlegendentry{e5-large-v2 (SNR $\geq$ 6.43)}
+\addplot[thick, green!40!black, mark=triangle*] coordinates {(1,0.1130) (5,0.1150) (10,0.1166)};
+\addlegendentry{gte-large (SNR $\geq$ 5.21)}
+\end{axis}
+\end{tikzpicture}
 \caption{Encoder-invariance across three independent pre-training lineages. Each encoder is flat in density (relative gap range $\le 0.035$) and reaches $0\%$ templated poison-evasion, but the \emph{absolute} separation is encoder-dependent (bge $\approx 0.24$; e5 $\approx 0.12$; gte $\approx 0.11$). What generalizes is that the gate works, not that the margin is the same size on every manifold.}
 \label{fig:encoder}
 \end{figure}
@@ -918,7 +987,8 @@ against its designers' own re-implementation of the attack: SEVA detects
 PoisonedRAG on the ground PoisonedRAG was built to win.
 
 \subsection{Lexical Duplicate Filtering Is Corpus-Fragile}
-\label{subsec:lex} also answers the sharpest objection to a cohesion-based detector: that
+\label{subsec:lex}
+The cross-domain result also answers the sharpest objection to a cohesion-based detector: that
 it merely reimplements the duplicate filtering PoisonedRAG itself tested and dismissed
 (\S7.3 of~\cite{poisonedrag}). Lexical near-duplicate filtering (MinHash~\cite{minhash}) is \emph{corpus-fragile}. On the lexically
 sparse Security corpus it catches the attack ($98\%$), because a matched-FPR threshold can sit
@@ -987,7 +1057,7 @@ accumulated over a multi-document retrieval window, inflate the rate at which wh
 Because PoisonedRAG injects five passages per target query, a genuine
 attack lights up several retrieved documents while benign false positives are
 typically isolated; flagging a query only when $\geq\!2$ of its retrieved documents
-gate cuts the benign query-level false-positive rate from $3.15\%$ to
+are flagged cuts the benign query-level false-positive rate from $3.15\%$ to
 $0.90\%$---a $3.5\times$ reduction---while the poison catch rate is unchanged at
 $98\%$.
 
@@ -1098,7 +1168,19 @@ neither the attack nor the detector.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{docs/figures/cross_platform.png}
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=4.1cm,
+  xlabel={contamination density (\%)}, ylabel={\texttt{cluster\_coh} gap},
+  xmin=0, xmax=11, ymin=0.232, ymax=0.252, xtick={1,5,10},
+  ytick={0.234,0.238,0.242,0.246,0.250},
+  yticklabel style={/pgf/number format/.cd, fixed, precision=3},
+  legend pos=south east, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[thick, blue!60!black, mark=*, mark size=2.6pt] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
+\addlegendentry{RTX 4060 (CUDA)}
+\addplot[only marks, orange!85!black, mark=o, mark size=4pt, thick] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
+\addlegendentry{Apple M4 (MPS)}
+\end{axis}
+\end{tikzpicture}
 \caption{Cross-platform reproduction on the byte-identical, hash-verified corpus. The gap-per-density curves for an RTX~4060 (CUDA) and an Apple~M4 (MPS) are indistinguishable at plot resolution; the platforms differ in latency ($38.1$ vs.\ $28.1$\,ms mean), not in the detection decision.}
 \label{fig:xplat}
 \end{figure}
