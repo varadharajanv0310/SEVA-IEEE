@@ -297,7 +297,6 @@ SEVA occupies the gap none of these fill: a corpus-level, LLM-free detector with
 no decoder access, no pre-registration, and millisecond latency on laptop-class
 hardware.
 
-
 \begin{table*}[t]
 \centering
 \caption{The cohesion-detection family and its neighbours. ``Corpus'' marks defenses that score
@@ -438,8 +437,6 @@ treat it as a stated residual of corpus-level detection
 
 \section{SEVA Architecture}
 \label{sec:arch}
-
-
 
 \subsection{The Geometric Signal}
 
@@ -1239,7 +1236,6 @@ is advantaged by. On templated poison it flags every injected passage; on host-a
 it flags none. Detection is corpus-level and LLM-free for both methods, and both run on the same
 cached embeddings, so the comparison isolates the statistic computed from the shared assumption.
 
-
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -1551,7 +1547,6 @@ the loop, remains open.
 
 \appendices
 
-
 \section{Per-Seed Confusion Matrices}
 \label{app:confusion}
 We report complete confusion counts for every in-domain condition, the per-seed
@@ -1773,14 +1768,7 @@ $\geq\!2$ flagged & \textbf{0.97\%} & \textbf{98.0\%} \\
 
 \section{Detailed Measurements}
 \label{app:detail}
-The tables in this appendix give the per-condition detail behind every summary figure in
-
-
-
-
-
-
-the main text. Each is calibrated non-oracle on clean coherence alone, so no row borrows
+The tables in this appendix give the per-condition detail behind every summary figure in the main text. Each is calibrated non-oracle on clean coherence alone, so no row borrows
 information from the poison it is scored against.
 
 Table~\ref{tab:signals} is the ten-signal inventory underlying the composite ablation of the
@@ -1838,17 +1826,6 @@ Adaptive (keyword-drop) & \textbf{0\%} & 49--57\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-Per-platform detail for the cross-platform reproduction reported in the main paper: identical detection across CUDA and Apple-Silicon backends on the byte-identical hash-verified corpus.
-
-
-
-Per-encoder detail for Observation~3 of the main paper: the geometric gate under three embedding lineages on the identical hash-verified in-domain corpus, each calibrated non-oracle in its correct symmetric convention.
-
-
-
-Per-defense detail for the reproduced, shared-corpus, matched-FPR head-to-head of the main paper.
-
 \begin{table}[H]
 \centering
 \caption{Reproduced head-to-head against the per-query state of the art on a
@@ -1868,13 +1845,6 @@ RAGDefender & $\sim$89\% & 50.4\% \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-Per-density detail for the million-document scale validation reported in the main paper.
-
-
-
-Per-corpus detail for the cross-domain results reported in the main paper: cluster coherence against lexical MinHash and embedding near-duplicate detection at the matched non-oracle operating point.
-
 \begin{table}[H]
 \centering
 \caption{Cross-domain detection of the PoisonedRAG attack at the $0.69\%$ non-oracle
@@ -1896,9 +1866,6 @@ HotpotQA          & 9.06\% & \textbf{97\%} & 0\%  & 98\% & 3\% \\
 \bottomrule
 \end{tabular}}
 \end{table}
-
-
-
 
 \begin{figure}[H]
 \centering
@@ -1966,7 +1933,6 @@ $5.00\%$ & $0.8130$ & $\mathbf{100\%}$ & $5.000\%$ \\
 \end{tabular}
 \end{table}
 
-
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}
@@ -2011,9 +1977,6 @@ Multi-site SE    & $1{,}000{,}000$ & --- & $0.748$ & scale \\
 \end{tabular}
 \end{table}
 
-
-
-
 \begin{table}[H]
 \centering
 \caption{Frozen detector constants. No value is tuned per corpus, per density, or per encoder;
@@ -2055,8 +2018,6 @@ S-T     & $3.0.1$ & $5.3.0$ & $5.2.2$ \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-
 
 \begin{table*}[t]
 \centering
