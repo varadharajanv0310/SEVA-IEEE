@@ -239,7 +239,7 @@ the headline operating-point numbers appear in the main paper's cross-domain tab
 the sweep here shows lexical filtering catching nothing below a $2\%$ false-positive rate
 while cluster coherence catches the attack at the $0.69\%$ operating point. Table~\ref{tab:agg}
 reports the per-query aggregation that, by requiring $\geq\!2$ flagged documents per query,
-cuts the benign query-level false-positive rate $3.5\times$ at no cost to catch rate.
+cuts the benign query-level false-positive rate $3.2\times$ at no cost to catch rate.
 
 \begin{table}[htbp]
 \centering
@@ -273,7 +273,7 @@ Corpus & FPR & \texttt{cluster\_coh} & MinHash & $s_{nd}$ \\
 \caption{Per-query aggregation on the PoisonedRAG corpus (same $0.69\%$ document
 threshold). Requiring $\geq\!2$ flagged documents per query exploits the attack's
 multi-passage structure to cut the benign query-level false-positive rate
-$3.5\times$ at no cost to catch rate.}
+$3.2\times$ at no cost to catch rate.}
 \label{tab:agg}
 \begin{tabular}{lcc}
 \toprule

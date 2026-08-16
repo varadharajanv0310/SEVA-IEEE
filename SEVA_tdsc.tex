@@ -544,7 +544,7 @@ reads. Per-query aggregation at $k=2$ exploits the attack's own structure---%
 PoisonedRAG injects five passages per target query, so a real attack
 lights up several retrieved documents while benign false positives are typically
 isolated; requiring two flags cuts the benign query-level false-positive rate
-$3.5\times$ at no cost to detection.
+$3.2\times$ at no cost to detection.
 
 \begin{algorithm}[t]
 \caption{SEVA detection (\texttt{cluster\_coh} hard gate)}
@@ -685,10 +685,11 @@ latency are additionally reproduced on an RTX 4060 and an Apple M4
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=4.1cm, xbar, bar width=4.2mm,
-  xmin=0.70, xmax=1.04, xlabel={\texttt{cluster\_coh}},
+\begin{axis}[width=0.74\columnwidth, height=4.1cm, xbar, bar width=4.2mm,
+  xmin=0.70, xmax=1.06, xlabel={\texttt{cluster\_coh}},
   ytick={0,1,2,3}, y dir=reverse,
-  yticklabels={clean (pure), clean (poisoned), poison (min), poison (mean)},
+  yticklabel style={font=\scriptsize},
+  yticklabels={clean, clean (pois.), poison min, poison mean},
   nodes near coords, nodes near coords style={font=\tiny},
   point meta=explicit symbolic, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
 \addplot[fill=black!12, draw=black!45] coordinates {(0.7510,0) [0.7510] (0.7485,1) [0.7485] (0.8905,2) [0.8905] (0.9951,3) [0.9951]};
