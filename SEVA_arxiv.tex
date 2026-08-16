@@ -895,7 +895,7 @@ Density & Clean coh. & Poison coh. & Gap & SNR \\
 \begin{tikzpicture}
 \begin{axis}[width=\columnwidth, height=3.3cm,
   xlabel={contamination density (\%)}, ylabel={coherence gap},
-  xmin=0, xmax=11, ymin=0.11, ymax=0.33, xtick={1,5,10},
+  xmin=0, xmax=11, ymin=0.11, ymax=0.42, xtick={1,5,10},
   legend pos=north west, legend columns=3, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\tiny, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
 \addplot[thick, black!45, mark=square*] coordinates {(1,0.1411) (5,0.2813) (10,0.2789)};
 \addlegendentry{$N=10$k}
@@ -955,7 +955,7 @@ $100{,}000$, $1{,}000{,}000$). Because the largest point also uses a broader cor
 \begin{tikzpicture}
 \begin{axis}[width=\columnwidth, height=4.1cm,
   xlabel={contamination density (\%)}, ylabel={\texttt{cluster\_coh} gap},
-  xmin=0, xmax=11, ymin=0.09, ymax=0.31, xtick={1,5,10},
+  xmin=0, xmax=11, ymin=0.09, ymax=0.42, xtick={1,5,10},
   legend pos=north west, legend columns=1, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
 \addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
 \addlegendentry{bge-large (SNR $\geq$ 5.93)}
@@ -1147,7 +1147,7 @@ clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for \emph{e
 $50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at $K=5$. Raising the
 injection to five clones per target is the only thing that moves the statistic, and it moves it
 against the attacker rather than for him, since clones sharing a payload begin to resemble one
-another---the mutual similarity the attack exists to avoid (\S\ref{subsec:boundary} reports the
+another---the mutual similarity the attack exists to avoid (Table~\ref{tab:multiplicity} reports the
 sweep). The adversary's optimum is therefore the single anchored clone, and that is the one the
 gate never sees. Nor does the complementary signal: nearest-neighbour
 duplication $s_{nd}$, which flags templated poison perfectly, catches only $13$--$20\%$ of
@@ -1192,7 +1192,7 @@ CleanBase~\cite{cleanbase} (reproduced) & \textbf{100\%} & $0\%$ \\
 \label{app:boundaryfull}
 \begin{table}[H]
 \centering
-\caption{Injection multiplicity does not restore detection. Host-anchored clones scored in the
+\caption{Injection multiplicity restores detection only partially, and at the attacker's expense. Host-anchored clones scored in the
 corpus the attack creates ($95{,}000$ clean documents plus the injected clones, no templated
 poison present), with both thresholds recalibrated per configuration at the same $0.69\%$
 budget. Cohesion rises with multiplicity but stays under $\tau=0.840$ on average.}

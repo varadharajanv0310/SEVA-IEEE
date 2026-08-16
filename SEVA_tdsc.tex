@@ -904,7 +904,7 @@ exponent, and do not extrapolate beyond $10^{6}$.
 \begin{tikzpicture}
 \begin{axis}[width=\columnwidth, height=4.1cm,
   xlabel={contamination density (\%)}, ylabel={\texttt{cluster\_coh} gap},
-  xmin=0, xmax=11, ymin=0.09, ymax=0.31, xtick={1,5,10},
+  xmin=0, xmax=11, ymin=0.09, ymax=0.42, xtick={1,5,10},
   legend pos=north west, legend columns=1, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
 \addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
 \addlegendentry{bge-large (SNR $\geq$ 5.93)}
@@ -1097,7 +1097,7 @@ clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for \emph{e
 $50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at $K=5$. Raising the
 injection to five clones per target is the only thing that moves the statistic, and it moves it
 against the attacker rather than for him, since clones sharing a payload begin to resemble one
-another---the mutual similarity the attack exists to avoid (\S\ref{subsec:boundary} reports the
+another---the mutual similarity the attack exists to avoid (the supplement reports the
 sweep). The adversary's optimum is therefore the single anchored clone, and that is the one the
 gate never sees. Nor does the complementary signal: nearest-neighbour
 duplication $s_{nd}$, which flags templated poison perfectly, catches only $13$--$20\%$ of
