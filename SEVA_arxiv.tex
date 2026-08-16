@@ -15,6 +15,7 @@
 \usetikzlibrary{positioning,arrows.meta,fit,backgrounds,shapes.geometric}
 
 \usepackage{url}
+\usepackage{float}
 \usepackage[section]{placeins}
 % allow floats to occupy more of a page so section-local placement does not flush pages
 \renewcommand{\topfraction}{0.92}
@@ -377,7 +378,7 @@ technical corpora absorb the attack's vocabulary and blunt keyword-based
 detection, while general-domain corpora expose it as a vocabulary anomaly. This
 independently corroborates the choice at the center of our evaluation---an
 in-domain control corpus (Section~\ref{subsec:main})---and the collapse of the
-soft keyword signal we ablate (Appendix~\ref{app:signals}): a detector validated only
+soft keyword signal we ablate (Table~\ref{tab:signals}): a detector validated only
 against a general-domain background can mistake domain contrast for poison
 detection. Our result is complementary, and the constructive answer to that
 difficulty: a single geometric signal whose separation \emph{rises} in-domain,
@@ -608,7 +609,7 @@ linguistic and structural statistics through SNR-weighted, log-capped fusion:
 weights $w_i \propto \min\!\big(\log(1+|\mathrm{SNR}_i|),\,c\big)$ over the nine
 signals that clear an $|\mathrm{SNR}|\geq0.5$ gate, with automatic polarity
 inversion for signals (such as type--token ratio) that run lower on poison.
-Appendix~\ref{app:signals} gives the full signal inventory and its in-domain separation. The
+Table~\ref{tab:signals} gives the full signal inventory and its in-domain separation. The
 design held up against a general-domain corpus and a naive adversary; the
 evaluation gauntlet---an in-domain corpus that removes the domain shortcut, plus an
 adaptive adversary---is what exposed it.
@@ -682,6 +683,35 @@ fixed pool of $2{,}000$ benign queries; cross-domain results use the released
 poison at seed $42$. Numbers are measured on an RTX 5080 (CUDA); detection and
 latency are additionally reproduced on an RTX 4060 and an Apple M4
 (\S\ref{subsec:eff}).
+
+\subsection{Attack Construction}
+\label{app:attack}
+\emph{Templated poison (in-domain).} For each target query we inject multiple
+passages generated from a shared security-domain template, so the injected set for
+a query is internally homogeneous; contamination is swept at $1\%$, $5\%$, and
+$10\%$ of the corpus. \emph{Released PoisonedRAG (cross-domain).} We use the attack
+authors' published adversarial passages (PoisonedRAG) for Natural Questions
+and HotpotQA ($100$ target queries, $5$ passages each), following their released
+construction in which each passage prepends the target question to an LLM-crafted
+payload satisfying both retrieval and generation objectives; we add no
+re-implementation of our own. \emph{Adaptive adversary (L2/L3).} We model the
+keyword-dropping adversary by normalizing the soft signals at the feature
+level---keyword density at L2, keyword density and sentence-length structure at
+L3---without embedding-space optimization---gradient-based methods such as
+GCG or AutoDAN---which is the capability the geometric
+gate is built to withstand.
+
+\emph{Host-anchored clones (boundary experiment).} For each of the $50$ adversarial target
+queries we take the top-ranked benign document, rewrite it with an offline LLM
+(\texttt{mistral:7b-instruct}, temperature $0$) to preserve meaning while changing surface form,
+and splice the payload after the first sentence, truncating to $300$ words. Detection is
+LLM-free throughout; the LLM is used only for attack generation and for the answer-corruption
+check, which is judged by an offline generator (\texttt{gpt-oss:20b}, temperature $0$) counting
+payload markers in the answer with and without the clone present. A target counts as corrupted
+when the poisoned answer contains at least two payload markers and strictly more than the clean
+answer does. Cohesion for these clones is measured in the corpus the attack actually creates---
+clean documents plus the injected clones, with no templated poison present---since the two
+injection strategies are alternatives, not a combination.
 
 \subsection{Primary Detection Results}
 \label{subsec:main}
@@ -1157,6 +1187,81 @@ CleanBase~\cite{cleanbase} (reproduced) & \textbf{100\%} & $0\%$ \\
 \end{tabular}
 \end{table}
 
+\subsection{The Boundary in Full}
+\label{app:boundaryfull}
+\begin{table}[H]
+\centering
+\caption{Injection multiplicity does not restore detection. Host-anchored clones scored in the
+corpus the attack creates ($95{,}000$ clean documents plus the injected clones, no templated
+poison present), with both thresholds recalibrated per configuration at the same $0.69\%$
+budget. Cohesion rises with multiplicity but stays under $\tau=0.840$ on average.}
+\label{tab:multiplicity}
+\begin{tabular}{lccccc}
+\toprule
+Clones/target & Clone coh. & \texttt{cluster\_coh} & $s_{nd}$ & Union gate \\
+\midrule
+$1$ & $0.722$ & $0\%$    & $20.0\%$ & $13.3\%$ \\
+$2$ & $0.746$ & $0\%$    & $13.3\%$ & $6.7\%$  \\
+$3$ & $0.772$ & $11.1\%$ & $13.3\%$ & $20.0\%$ \\
+$5$ & $0.790$ & $22.7\%$ & $18.7\%$ & $33.3\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{The payload-prominence frontier with its potency axis (the data behind
+Fig.~\ref{fig:frontier}). ``Cands.''\ counts targets whose clone both evades the gate and is
+retrieved; flip is the fraction of those whose answer is corrupted; ASR is over all $50$
+targets. End-to-end success peaks at $25\%$ payload, where evasion is still total---so the gate
+does not bind at the adversary's optimum.}
+\label{tab:frontier}
+\begin{tabular}{lcccccc}
+\toprule
+Payload & Coh. & Evades & Retr. & Cands. & Flip & ASR \\
+\midrule
+$12\%$ & $0.752$ & $100\%$ & $90\%$ & $45$ & $17.8\%$ & $16.0\%$ \\
+$25\%$ & $0.764$ & $100\%$ & $78\%$ & $39$ & $35.9\%$ & $\mathbf{28.0\%}$ \\
+$37\%$ & $0.777$ & $86\%$  & $72\%$ & $33$ & $33.3\%$ & $22.0\%$ \\
+$62\%$ & $0.837$ & $46\%$  & $38\%$ & $13$ & $46.2\%$ & $12.0\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{CleanBase reproduction.} We implement the described algorithm directly: an edge joins two
+documents when their cosine similarity exceeds $\mu + z\sigma$ of the clean similarity
+distribution, and a document is flagged when it belongs to a clique of size $\ge 3$. Rather than
+adopt the paper's suggested $z$, we sweep $z$ by bisection until the \emph{clean} false-positive
+rate matches our own $0.69\%$ operating point, which lands at $z=2.24$ ($\tau=0.8605$,
+realized FPR $0.689\%$)---close to the value the paper suggests, and a comparison neither method
+is advantaged by. On templated poison it flags every injected passage; on host-anchored clones
+it flags none. Detection is corpus-level and LLM-free for both methods, and both run on the same
+cached embeddings, so the comparison isolates the statistic computed from the shared assumption.
+
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=4.2cm,
+  ybar stacked, bar width=8mm,
+  symbolic x coords={RTX~4060,Apple~M4,RTX~5080~(1M)},
+  xtick=data, ymin=0, ylabel={per-query latency (ms)},
+  tick label style={font=\scriptsize}, label style={font=\scriptsize},
+  legend style={font=\scriptsize, at={(0.98,0.97)}, anchor=north east, draw=none},
+  grid=both, grid style={line width=.2pt, draw=gray!20}]
+\addplot[fill=black!18] coordinates {(RTX~4060,37.36) (Apple~M4,27.70) (RTX~5080~(1M),14.61)};
+\addlegendentry{query encode}
+\addplot[fill=red!45!black] coordinates {(RTX~4060,0.71) (Apple~M4,0.41) (RTX~5080~(1M),0.42)};
+\addlegendentry{retrieve $+$ gate}
+\end{axis}
+\end{tikzpicture}
+\caption{Where the per-query millisecond goes. The detector's own contribution---retrieval plus
+the threshold test---is $0.41$--$0.71$\,ms on every platform, including at $N=10^6$; the rest is
+the encoder forward pass a RAG system already pays. This is why the deployment envelope is
+insensitive to corpus size.}
+\label{fig:latency}
+\end{figure}
+
 \subsection{Prevention, Not Just Flagging}
 \label{subsec:e2e}
 Every result so far measures whether poison is \emph{flagged}. Because the boundary above is
@@ -1212,6 +1317,19 @@ The detector is also cheap: it adds a single threshold comparison against a prec
 statistic, so detection cost is dominated by the retrieval the RAG system already performs.
 End-to-end per-query latency is $13$--$38$\,ms mean (p95 $\le 44$\,ms) across the three platforms, with no LLM call and no external API; the FAISS HNSW index makes
 neighbour lookups $O(\log N)$, so per-query cost is effectively flat as the corpus grows.
+
+\subsection{Deployment Cost of the Corpus-Level Precompute}
+\label{app:cost}
+Per-query latency is only half the deployment question; the other half is the one-time
+corpus-level pass, which we report rather than amortize away. On the RTX~5080, embedding
+$200{,}000$ documents takes $1557$\,s, one HNSW build over that set $259$\,s, and one $K=5$
+coherence pass $286$\,s. At $N=10^6$ the measured run required $\approx 7785$\,s to embed and
+$\approx 3086$\,s per contamination density for the index and coherence pass, for a total
+wall-clock of $3.3$\,h including corpus construction and hash gating. Embedding dominates and is
+linear in $N$; the index and coherence terms grow as $N\log N$. Two properties matter
+operationally. The pass is incremental: re-screening after an ingestion batch touches only the
+new documents and the neighbourhoods they perturb, not the whole corpus. And it is offline: no
+query is blocked on it, since detection at query time is a lookup against the cached statistic.
 
 \subsection{Validation at Million-Document Scale}
 \label{subsec:scale}
@@ -1289,6 +1407,23 @@ operating point a rational attacker chooses. We state this plainly because the o
 easy to make and we made it ourselves before measuring: a geometric gate raises the bar for the
 attack it reads, and does not raise it at all for an attacker willing to write different text.
 
+\subsection{Deployment Guidance}
+\label{app:guidance}
+Our results support a narrow recommendation, and we state its limits with it. A cohesion gate is
+worth deploying where the threat is the published templated attack: it costs one offline pass and
+sub-millisecond per query, needs no LLM, no decoder access and no registration authority, holds
+its operating point across encoders and hardware, and---measured end to end---removes all of the
+answer corruption that attack produces. For an operator whose realistic adversary is an
+opportunistic injector reusing published tooling, that is a favourable trade.
+
+It belongs behind controls that do not depend on the attacker's text---provenance on the
+ingestion path, rate and origin limits on who may write to the corpus, and review of documents
+entering through low-trust channels---and deployed there it is a precise instrument: a filter for
+known attack structure, with a characterized envelope and a known edge. What it does not do is
+bound the adversary, and an operator should size it accordingly, since an attacker who reads this
+paper can evade it with one paraphrase per target. The geometric signal tells you when someone
+has used the standard attack; it cannot tell you that nobody has attacked.
+
 \section{Limitations}
 \label{sec:limits}
 SEVA's scope is stated, not stumbled into; the following are the boundaries of the
@@ -1331,6 +1466,70 @@ to embeddings adversarially trained or otherwise built to be poison-aware: an en
 optimized to scatter templated injections away from their own siblings could in
 principle flatten the cohesion gap, and we make no claim against that class.
 
+\subsection{Negative Results, and One Retraction}
+\label{app:negative}
+Page limits usually push results like these out of a paper. We keep them because the boundary of
+\S\ref{subsec:boundary} was only found by running them, and because a reader deciding whether to
+deploy a cohesion gate needs them more than another confirmatory table.
+
+\emph{Density-invariance fails on small corpora.} Observation~1 is stated over the evaluated
+$1$--$10\%$ range at $N=10^5$, and it holds there. It does \emph{not} hold at $N=10^4$: the
+coherence gap collapses to $0.141$ at $1\%$ contamination, and the corresponding run records both
+\texttt{gap\_density\_invariant: false} and \texttt{templated\_asr\_zero: false}. The mechanism is
+the one Observation~1 relies on read in reverse---with $10^4$ documents and $1\%$ contamination
+there are too few injected siblings for a poison passage's $K=5$ neighbourhood to be dominated by
+its own cluster. Density-invariance is a large-corpus property. Figure~\ref{fig:scaling} plots
+the failure rather than cropping it.
+
+\emph{A complementary signal that did not work.} Host-anchored clones evade cohesion because each
+is anchored to a distinct benign host; the natural repair is to add nearest-neighbour duplication
+$s_{nd}$, which should spike precisely because a clone stays close to the host it mimics. We
+expected this to close the gap. It does not: paraphrasing moves the clone far enough from its
+host that $s_{nd}$ stays inside the clean band, catching $13$--$20\%$ of clones, and a union gate
+over both signals jointly calibrated to the same budget reaches only $6.7$--$33.3\%$
+(Table~\ref{tab:multiplicity}). We report the failed repair because it is what elevates the
+finding from ``our statistic has a blind spot'' to ``the geometric information available to this
+family does not separate host-anchored clones from their hosts.''
+
+\emph{A retracted claim.} An earlier version of this work argued that evading the gate is
+expensive---that dispersion and retrievability could not be bought together, and that the
+geometry therefore imposed a cost-of-attack floor. Three separate measurements contradicted it.
+The best-case geometric probe found no such necessity; the prominence sweep showed dispersion and
+retrievability \emph{are} jointly purchasable at low payload; and, measured on one protocol with
+one generator and one corruption criterion, the bypass corrupts $26$--$28\%$ of targets against
+$18\%$ for the templated attack it replaces---it is more effective, not less. The earlier claim
+survived as long as it did because it compared our figure against a number reported elsewhere
+under a different generator, corpus and criterion. We state the correction plainly here: a
+cohesion gate raises the bar for the attack it reads and does not raise it for an adversary
+willing to write different text.
+
+\subsection{What Would Close the Boundary}
+\label{app:future}
+The blind spot is informative about what a repair must do. Host-anchored clones defeat cohesion
+because they are, geometrically, ordinary documents: they sit where a benign document sits,
+because they were built from one. Any statistic computed \emph{only} from the corpus embedding
+geometry therefore has no signal to read---which our failed $s_{nd}$ repair demonstrates rather
+than assumes. Three directions do not share that limitation. Provenance breaks the symmetry
+without looking at content at all, at the cost of an authority the offline setting was chosen to
+avoid. Cross-encoder or entailment scoring between a passage and the claim it supports reads
+meaning rather than position, and would see that a clone's payload contradicts its host's own
+content; it costs a second model, though not necessarily a generative one. Retrieval-time
+consistency---asking whether the documents retrieved for one query agree with each other---is
+what the per-query filters already approximate, and pairing it with a corpus-level statistic is
+the obvious hybrid our results argue for, since the two fail on disjoint inputs.
+
+\section{Ethics and Responsible Disclosure}
+\label{app:ethics}
+This work evaluates a defense, but the boundary we report is an attack technique, and we describe
+it in enough detail to reproduce. We judged disclosure appropriate on three grounds. The
+construction is not novel or difficult---it is copy, paraphrase, splice, and requires no gradient
+access, no optimization and no model internals; an adversary willing to spend one LLM call per
+target would find it. It defeats a defense family that is being actively proposed for deployment,
+so operators need it to calibrate what they are buying. And withholding it would leave our own
+positive results overstated, which is the failure mode this paper exists to correct. No live
+system was attacked: every experiment runs on a locally constructed corpus with synthetic
+payloads, and the released artifacts contain no real credentials or personal data.
+
 \section{Conclusion}
 We presented SEVA, a lightweight, LLM-free detector of templated multi-passage corpus
 poisoning built on a single geometric signal operated as a hard gate, and used it to
@@ -1364,7 +1563,7 @@ gate (main paper) eliminates. Table~\ref{tab:percond} converts these
 counts into per-condition detection rates---poison-evasion with Wilson upper bounds,
 and document- and query-level false-positive rates---for all nine conditions.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Complete per-seed confusion matrices at L1 (full signal set), in-domain
 Security corpus. Every cell has $\mathrm{FN}=0$: the $0\%$ L1 poison-evasion reported
@@ -1389,7 +1588,7 @@ Density & Seed & TP & FN & FP & TN \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Per-seed confusion at L2 and L3 (soft signals ablated), in-domain---the
 composite's adaptive collapse. The geometric hard gate (main paper)
@@ -1454,35 +1653,6 @@ Density & Seed & $n$ & Evasion (95\% Wilson) & Doc-FPR & query-FPR \\
 \end{tabular}
 \end{table*}
 
-\section{Attack Construction}
-\label{app:attack}
-\emph{Templated poison (in-domain).} For each target query we inject multiple
-passages generated from a shared security-domain template, so the injected set for
-a query is internally homogeneous; contamination is swept at $1\%$, $5\%$, and
-$10\%$ of the corpus. \emph{Released PoisonedRAG (cross-domain).} We use the attack
-authors' published adversarial passages (PoisonedRAG) for Natural Questions
-and HotpotQA ($100$ target queries, $5$ passages each), following their released
-construction in which each passage prepends the target question to an LLM-crafted
-payload satisfying both retrieval and generation objectives; we add no
-re-implementation of our own. \emph{Adaptive adversary (L2/L3).} We model the
-keyword-dropping adversary by normalizing the soft signals at the feature
-level---keyword density at L2, keyword density and sentence-length structure at
-L3---without embedding-space optimization---gradient-based methods such as
-GCG or AutoDAN---which is the capability the geometric
-gate is built to withstand.
-
-\emph{Host-anchored clones (boundary experiment).} For each of the $50$ adversarial target
-queries we take the top-ranked benign document, rewrite it with an offline LLM
-(\texttt{mistral:7b-instruct}, temperature $0$) to preserve meaning while changing surface form,
-and splice the payload after the first sentence, truncating to $300$ words. Detection is
-LLM-free throughout; the LLM is used only for attack generation and for the answer-corruption
-check, which is judged by an offline generator (\texttt{gpt-oss:20b}, temperature $0$) counting
-payload markers in the answer with and without the clone present. A target counts as corrupted
-when the poisoned answer contains at least two payload markers and strictly more than the clean
-answer does. Cohesion for these clones is measured in the corpus the attack actually creates---
-clean documents plus the injected clones, with no templated poison present---since the two
-injection strategies are alternatives, not a combination.
-
 \section{Calibration Thresholds and Reproducibility}
 \label{app:repro}
 Table~\ref{tab:tau} lists the calibrated thresholds. The deployed geometric gate
@@ -1499,7 +1669,7 @@ Per-condition
 artifacts (confusion counts, thresholds, latencies) are recorded per seed and
 density.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Calibrated thresholds. The geometric gate (deployed) and the composite
 tiers (ablation), in-domain ranges shown across $1$--$10\%$ density.}
@@ -1527,7 +1697,7 @@ reproduced measurement). SEVA is the only entry that is simultaneously LLM-free,
 decoder-free, registration-free, corpus-level, and evaluated across the $1$--$10\%$
 density band.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Deployment-capability comparison (factual properties of each defense, per
 its publication; not lifted ASR numbers). $\checkmark$ = property held.}
@@ -1556,7 +1726,7 @@ while cluster coherence catches the attack at the $0.69\%$ operating point. Tabl
 reports the per-query aggregation that, by requiring $\geq\!2$ flagged documents per query,
 cuts the benign query-level false-positive rate $3.5\times$ at no cost to catch rate.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Matched-FPR catch rate of the released PoisonedRAG attack on Natural
 Questions and HotpotQA as the operating false-positive rate is swept, for cluster
@@ -1583,7 +1753,7 @@ Corpus & FPR & \texttt{cluster\_coh} & MinHash & $s_{nd}$ \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Per-query aggregation on the PoisonedRAG corpus (same $0.69\%$ document
 threshold). Requiring $\geq\!2$ flagged documents per query exploits the attack's
@@ -1603,16 +1773,20 @@ $\geq\!2$ flagged & \textbf{0.97\%} & \textbf{98.0\%} \\
 \section{Detailed Measurements}
 \label{app:detail}
 The tables in this appendix give the per-condition detail behind every summary figure in
+
+
+
+
+
+
 the main text. Each is calibrated non-oracle on clean coherence alone, so no row borrows
 information from the poison it is scored against.
 
-\subsection{Signal Inventory (Composite Ablation)}
-\label{app:signals}
 Table~\ref{tab:signals} is the ten-signal inventory underlying the composite ablation of the
 main paper: only cluster coherence combines a high in-domain SNR with robustness to both the
 domain-confound control and adaptive normalization.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{In-domain signal inventory (Security Stack Exchange, seed~42, $1\%$
 density). Only cluster coherence combines a high SNR with robustness to both the
@@ -1640,13 +1814,11 @@ Signal & Type & In-domain SNR & Status \\
 \end{tabular}
 \end{table}
 
-\subsection{Geometric Core vs.\ Composite}
-\label{app:core}
 Table~\ref{tab:core} accompanies the geometric-core discussion of the main paper: the composite
 matches the hard gate on the naive attack, dilutes detection on real PoisonedRAG, and collapses
 under the keyword-dropping adversary, while the hard gate holds.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{The geometric core vs.\ the multi-signal composite (the ablation), at
 $0.69\%$ non-oracle document-FPR, by poison-evasion rate (lower is better). The
@@ -1666,57 +1838,17 @@ Adaptive (keyword-drop) & \textbf{0\%} & 49--57\% \\
 \end{tabular}
 \end{table}
 
-\subsection{Cross-Platform Reproduction}
-\label{app:xplat}
 Per-platform detail for the cross-platform reproduction reported in the main paper: identical detection across CUDA and Apple-Silicon backends on the byte-identical hash-verified corpus.
 
-\begin{table*}[t]
-\centering
-\caption{Cross-platform reproduction on a byte-identical, hash-verified corpus (SHA-256
-\texttt{28ec3811}$\dots$): \emph{identical} detection across CUDA and Apple-Silicon
-backends---the gap, SNR, and $0\%$ templated poison-evasion match on every platform,
-density, and seed (the two re-embedded external machines agree on the gap to within
-$5\times10^{-7}$)---at $13$--$38$\,ms per query.}
-\label{tab:xplat}
-\begin{tabular}{llcccc}
-\toprule
-Platform & Backend & Gap ($1$--$10\%$) & SNR & Templ.\ evasion & Latency mean/p95 \\
-\midrule
-RTX 5080 (desktop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $13.4$--$15.7$\,/\,$\le\!18.8$\,ms \\
-RTX 4060 (laptop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $38.1$\,/\,$43.6$\,ms \\
-Apple M4 (laptop) & MPS & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $28.1$\,/\,$37.3$\,ms \\
-\bottomrule
-\end{tabular}
-\end{table*}
 
-\subsection{Encoder-Invariance Detail}
-\label{app:encoder}
+
 Per-encoder detail for Observation~3 of the main paper: the geometric gate under three embedding lineages on the identical hash-verified in-domain corpus, each calibrated non-oracle in its correct symmetric convention.
 
-\begin{table*}[t]
-\centering
-\caption{Encoder-invariance: the geometric gate across three embedding lineages on the
-identical hash-verified in-domain corpus, each calibrated non-oracle in its correct
-symmetric convention. Templated poison-evasion is $0\%$ for all three; the absolute gap
-shrinks only as the clean manifold concentrates (clean coherence $0.751\!\to\!0.881$),
-while the scale-normalized SNR holds. Values span $1$--$10\%$ density.}
-\label{tab:encoder}
-\begin{tabular}{llccccc}
-\toprule
-Encoder & Lineage & Clean coh. & Poison coh. & Gap & SNR & Templ.\ evasion \\
-\midrule
-bge-large   & BAAI      & $0.751$ & $0.990$ & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ \\
-e5-large-v2 & Microsoft & $0.866$ & $0.990$ & $+0.122$ to $+0.127$ & $6.4$--$6.7$ & $\mathbf{0\%}$ \\
-gte-large   & Alibaba   & $0.881$ & $0.996$ & $+0.113$ to $+0.117$ & $5.2$--$5.3$ & $\mathbf{0\%}$ \\
-\bottomrule
-\end{tabular}
-\end{table*}
 
-\subsection{Reproduced Head-to-Head Detail}
-\label{app:h2h}
+
 Per-defense detail for the reproduced, shared-corpus, matched-FPR head-to-head of the main paper.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Reproduced head-to-head against the per-query state of the art on a
 shared Security corpus and templated attack. RAGDefender uses SEVA's encoder
@@ -1736,34 +1868,13 @@ RAGDefender & $\sim$89\% & 50.4\% \\
 \end{tabular}
 \end{table}
 
-\subsection{Million-Document Scale Detail}
-\label{app:scale}
 Per-density detail for the million-document scale validation reported in the main paper.
 
-\begin{table*}[t]
-\centering
-\caption{Validation at million-document scale: $N=1{,}000{,}000$, a broader hash-gated
-technical corpus (SHA-256 \texttt{317eb43c}$\dots$---\emph{distinct} from the
-cross-platform corpus of the main paper). Latency is $15.0$\,ms mean / $18.2$\,ms p95,
-of which retrieval and gate are $\approx\!0.4$\,ms (sub-millisecond at $10\times$ scale);
-poison-evasion is $0\%$, the gap density-invariant, and the non-oracle document-FPR
-$0.70\%$. The poison budget fills $1\%$ and $5\%$; $10\%$ exceeds it. Three seeds.}
-\label{tab:scale}
-\begin{tabular}{lccccc}
-\toprule
-Density & $n_{\mathrm{poison}}$ & Gap & SNR & Evasion & Doc-FPR \\
-\midrule
-$1\%$ & $10{,}000$ & $+0.245$ & $5.63$ & $\mathbf{0\%}$ & $0.68\%$ \\
-$5\%$ & $50{,}000$ & $+0.249$ & $5.57$ & $\mathbf{0\%}$ & $0.72\%$ \\
-\bottomrule
-\end{tabular}
-\end{table*}
 
-\subsection{Cross-Domain Detection Detail}
-\label{app:xdomain}
+
 Per-corpus detail for the cross-domain results reported in the main paper: cluster coherence against lexical MinHash and embedding near-duplicate detection at the matched non-oracle operating point.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Cross-domain detection of the PoisonedRAG attack at the $0.69\%$ non-oracle
 operating point (released poison on Natural Questions and HotpotQA; a faithful black-box
@@ -1788,7 +1899,7 @@ HotpotQA          & 9.06\% & \textbf{97\%} & 0\%  & 98\% & 3\% \\
 
 
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
 \begin{axis}[width=\columnwidth, height=4.2cm,
@@ -1811,12 +1922,10 @@ recalibrated threshold together, leaving the margin intact: catch is $100\%$ at 
 \label{fig:ksens}
 \end{figure}
 
-\subsection{Complete Sensitivity Measurements}
-\label{app:sens}
 The main text summarizes these; the full sweeps are below. Every row recalibrates the threshold
 non-oracle on clean coherence alone, so no row borrows information from the poison.
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{$K$-sensitivity. \texttt{cluster\_coh} recomputed over the whole $100{,}000$-document
 corpus for each $K$, with $\tau$ recalibrated at the $0.69\%$ target each time. Detection does
@@ -1835,7 +1944,7 @@ $20$ & $0.8032$ & $0.7271$ & $0.9782$ & $\mathbf{100\%}$ & $0.691\%$ \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Operating-point sweep, in-domain, frozen $K=5$. Catch is $100\%$ at every deployable
 false-positive target, including one seven times tighter than the reported operating point.
@@ -1857,17 +1966,17 @@ $5.00\%$ & $0.8130$ & $\mathbf{100\%}$ & $5.000\%$ \\
 \end{table}
 
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=4.3cm,
+\begin{axis}[width=\columnwidth, height=2.7cm,
   xlabel={false-positive rate (\%)}, ylabel={catch rate (\%)},
-  xmin=0, xmax=5, ymin=90, ymax=101,
+  xmin=0, xmax=5, ymin=97.5, ymax=100.6, ytick={98,99,100},
   tick label style={font=\scriptsize}, label style={font=\scriptsize},
   grid=both, grid style={line width=.2pt, draw=gray!20}]
 \addplot[thick, blue!60!black, mark=none] coordinates {(0.0000,0.0200) (0.0000,1.9800) (0.0000,3.9400) (0.0000,5.9200) (0.0011,7.8600) (0.0011,9.8400) (0.0011,11.8000) (0.0011,13.7800) (0.0011,15.7400) (0.0011,17.7200) (0.0021,19.6600) (0.0021,21.6400) (0.0021,23.6000) (0.0021,25.5800) (0.0021,27.5400) (0.0032,29.5000) (0.0032,31.4600) (0.0032,33.4400) (0.0032,35.4000) (0.0032,37.3800) (0.0032,39.3400) (0.0032,41.3000) (0.0032,43.2800) (0.0032,45.2400) (0.0042,47.2000) (0.0042,49.1600) (0.0042,51.1400) (0.0042,53.1000) (0.0053,55.0600) (0.0063,57.0000) (0.0063,58.9800) (0.0063,60.9400) (0.0063,62.9200) (0.0063,64.8800) (0.0084,66.8200) (0.0084,68.7800) (0.0084,70.7600) (0.0095,72.7000) (0.0095,74.6800) (0.0095,76.6400) (0.0105,78.5800) (0.0105,80.5600) (0.0105,82.5200) (0.0116,84.4800) (0.0137,86.4000) (0.0147,88.3600) (0.0147,90.3200) (0.0147,92.3000) (0.0158,94.2400) (0.0158,96.2200) (0.0179,98.1400) (0.0242,100.0000) (0.1274,100.0000) (0.2316,100.0000) (0.3347,100.0000) (0.4389,100.0000) (0.5421,100.0000) (0.6463,100.0000) (0.7495,100.0000) (0.8537,100.0000) (0.9568,100.0000) (1.0600,100.0000) (1.1642,100.0000) (1.2674,100.0000) (1.3716,100.0000) (1.4747,100.0000) (1.5789,100.0000) (1.6821,100.0000) (1.7863,100.0000) (1.8895,100.0000) (1.9937,100.0000) (2.0968,100.0000) (2.2011,100.0000) (2.3042,100.0000) (2.4084,100.0000) (2.5116,100.0000) (2.6158,100.0000) (2.7189,100.0000) (2.8232,100.0000) (2.9263,100.0000) (3.0295,100.0000) (3.1337,100.0000) (3.2368,100.0000) (3.3411,100.0000) (3.4442,100.0000) (3.5484,100.0000) (3.6516,100.0000) (3.7558,100.0000) (3.8589,100.0000) (3.9632,100.0000) (4.0663,100.0000) (4.1705,100.0000) (4.2737,100.0000) (4.3779,100.0000) (4.4811,100.0000) (4.5853,100.0000) (4.6884,100.0000) (4.7926,100.0000) (4.8958,100.0000) (5.0000,100.0000)};
-\draw[green!35!black, dash dot] (axis cs:0.69,90) -- (axis cs:0.69,101);
-\node[green!30!black, font=\tiny, anchor=west] at (axis cs:0.75,93) {deployed point};
+\draw[green!35!black, dash dot] (axis cs:0.69,97.5) -- (axis cs:0.69,100.6);
+\node[green!30!black, font=\tiny, anchor=west] at (axis cs:0.8,98.6) {deployed point};
 \end{axis}
 \end{tikzpicture}
 \caption{In-domain ROC over the deployable region, frozen $K=5$. Catch is saturated at $100\%$
@@ -1876,138 +1985,15 @@ target is not a tuned optimum---any threshold in this region gives the same dete
 \label{fig:roc}
 \end{figure}
 
-\section{The Boundary in Full}
-\label{app:boundaryfull}
-
-\begin{table}[t]
-\centering
-\caption{Injection multiplicity does not restore detection. Host-anchored clones scored in the
-corpus the attack creates ($95{,}000$ clean documents plus the injected clones, no templated
-poison present), with both thresholds recalibrated per configuration at the same $0.69\%$
-budget. Cohesion rises with multiplicity but stays under $\tau=0.840$ on average.}
-\label{tab:multiplicity}
-\begin{tabular}{lccccc}
-\toprule
-Clones/target & Clone coh. & \texttt{cluster\_coh} & $s_{nd}$ & Union gate \\
-\midrule
-$1$ & $0.722$ & $0\%$    & $20.0\%$ & $13.3\%$ \\
-$2$ & $0.746$ & $0\%$    & $13.3\%$ & $6.7\%$  \\
-$3$ & $0.772$ & $11.1\%$ & $13.3\%$ & $20.0\%$ \\
-$5$ & $0.790$ & $22.7\%$ & $18.7\%$ & $33.3\%$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{The payload-prominence frontier with its potency axis (the data behind
-Fig.~\ref{fig:frontier}). ``Cands.''\ counts targets whose clone both evades the gate and is
-retrieved; flip is the fraction of those whose answer is corrupted; ASR is over all $50$
-targets. End-to-end success peaks at $25\%$ payload, where evasion is still total---so the gate
-does not bind at the adversary's optimum.}
-\label{tab:frontier}
-\begin{tabular}{lcccccc}
-\toprule
-Payload & Coh. & Evades & Retr. & Cands. & Flip & ASR \\
-\midrule
-$12\%$ & $0.752$ & $100\%$ & $90\%$ & $45$ & $17.8\%$ & $16.0\%$ \\
-$25\%$ & $0.764$ & $100\%$ & $78\%$ & $39$ & $35.9\%$ & $\mathbf{28.0\%}$ \\
-$37\%$ & $0.777$ & $86\%$  & $72\%$ & $33$ & $33.3\%$ & $22.0\%$ \\
-$62\%$ & $0.837$ & $46\%$  & $38\%$ & $13$ & $46.2\%$ & $12.0\%$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\emph{CleanBase reproduction.} We implement the described algorithm directly: an edge joins two
-documents when their cosine similarity exceeds $\mu + z\sigma$ of the clean similarity
-distribution, and a document is flagged when it belongs to a clique of size $\ge 3$. Rather than
-adopt the paper's suggested $z$, we sweep $z$ by bisection until the \emph{clean} false-positive
-rate matches our own $0.69\%$ operating point, which lands at $z=2.24$ ($\tau=0.8605$,
-realized FPR $0.689\%$)---close to the value the paper suggests, and a comparison neither method
-is advantaged by. On templated poison it flags every injected passage; on host-anchored clones
-it flags none. Detection is corpus-level and LLM-free for both methods, and both run on the same
-cached embeddings, so the comparison isolates the statistic computed from the shared assumption.
-
-
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=4.2cm,
-  ybar stacked, bar width=8mm,
-  symbolic x coords={RTX~4060,Apple~M4,RTX~5080~(1M)},
-  xtick=data, ymin=0, ylabel={per-query latency (ms)},
-  tick label style={font=\scriptsize}, label style={font=\scriptsize},
-  legend style={font=\scriptsize, at={(0.98,0.97)}, anchor=north east, draw=none},
-  grid=both, grid style={line width=.2pt, draw=gray!20}]
-\addplot[fill=black!18] coordinates {(RTX~4060,37.36) (Apple~M4,27.70) (RTX~5080~(1M),14.61)};
-\addlegendentry{query encode}
-\addplot[fill=red!45!black] coordinates {(RTX~4060,0.71) (Apple~M4,0.41) (RTX~5080~(1M),0.42)};
-\addlegendentry{retrieve $+$ gate}
-\end{axis}
-\end{tikzpicture}
-\caption{Where the per-query millisecond goes. The detector's own contribution---retrieval plus
-the threshold test---is $0.41$--$0.71$\,ms on every platform, including at $N=10^6$; the rest is
-the encoder forward pass a RAG system already pays. This is why the deployment envelope is
-insensitive to corpus size.}
-\label{fig:latency}
-\end{figure}
-
-\section{Deployment Cost of the Corpus-Level Precompute}
-\label{app:cost}
-Per-query latency is only half the deployment question; the other half is the one-time
-corpus-level pass, which we report rather than amortize away. On the RTX~5080, embedding
-$200{,}000$ documents takes $1557$\,s, one HNSW build over that set $259$\,s, and one $K=5$
-coherence pass $286$\,s. At $N=10^6$ the measured run required $\approx 7785$\,s to embed and
-$\approx 3086$\,s per contamination density for the index and coherence pass, for a total
-wall-clock of $3.3$\,h including corpus construction and hash gating. Embedding dominates and is
-linear in $N$; the index and coherence terms grow as $N\log N$. Two properties matter
-operationally. The pass is incremental: re-screening after an ingestion batch touches only the
-new documents and the neighbourhoods they perturb, not the whole corpus. And it is offline: no
-query is blocked on it, since detection at query time is a lookup against the cached statistic.
-
-\section{Negative Results, and One Retraction}
-\label{app:negative}
-Page limits usually push results like these out of a paper. We keep them because the boundary of
-\S\ref{subsec:boundary} was only found by running them, and because a reader deciding whether to
-deploy a cohesion gate needs them more than another confirmatory table.
-
-\emph{Density-invariance fails on small corpora.} Observation~1 is stated over the evaluated
-$1$--$10\%$ range at $N=10^5$, and it holds there. It does \emph{not} hold at $N=10^4$: the
-coherence gap collapses to $0.141$ at $1\%$ contamination, and the corresponding run records both
-\texttt{gap\_density\_invariant: false} and \texttt{templated\_asr\_zero: false}. The mechanism is
-the one Observation~1 relies on read in reverse---with $10^4$ documents and $1\%$ contamination
-there are too few injected siblings for a poison passage's $K=5$ neighbourhood to be dominated by
-its own cluster. Density-invariance is a large-corpus property. Figure~\ref{fig:scaling} plots
-the failure rather than cropping it.
-
-\emph{A complementary signal that did not work.} Host-anchored clones evade cohesion because each
-is anchored to a distinct benign host; the natural repair is to add nearest-neighbour duplication
-$s_{nd}$, which should spike precisely because a clone stays close to the host it mimics. We
-expected this to close the gap. It does not: paraphrasing moves the clone far enough from its
-host that $s_{nd}$ stays inside the clean band, catching $13$--$20\%$ of clones, and a union gate
-over both signals jointly calibrated to the same budget reaches only $6.7$--$33.3\%$
-(Table~\ref{tab:multiplicity}). We report the failed repair because it is what elevates the
-finding from ``our statistic has a blind spot'' to ``the geometric information available to this
-family does not separate host-anchored clones from their hosts.''
-
-\emph{A retracted claim.} An earlier version of this work argued that evading the gate is
-expensive---that dispersion and retrievability could not be bought together, and that the
-geometry therefore imposed a cost-of-attack floor. Three separate measurements contradicted it.
-The best-case geometric probe found no such necessity; the prominence sweep showed dispersion and
-retrievability \emph{are} jointly purchasable at low payload; and, measured on one protocol with
-one generator and one corruption criterion, the bypass corrupts $26$--$28\%$ of targets against
-$18\%$ for the templated attack it replaces---it is more effective, not less. The earlier claim
-survived as long as it did because it compared our figure against a number reported elsewhere
-under a different generator, corpus and criterion. We state the correction plainly here: a
-cohesion gate raises the bar for the attack it reads and does not raise it for an adversary
-willing to write different text.
-
-
 \section{Corpora, Constants, and Environment}
 \label{app:setup}
 
-\begin{table*}[t]
+Every number in this paper comes from one of three corpora, one frozen constant set, and three software environments; all are listed here so a reader can tell at a glance what was held fixed and what was varied.
+
+\begin{table}[H]
 \centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
 \caption{Evaluation corpora. Benign duplication is the fraction of clean documents sharing a
 $5$-gram with another, the property that separates lexical from semantic detection.}
 \label{tab:corpora}
@@ -2016,15 +2002,18 @@ $5$-gram with another, the property that separates lexical from semantic detecti
 \toprule
 Corpus & Docs & Benign dup. & Clean coh. & Role \\
 \midrule
-Security SE      & $100{,}000$   & $0.24\%$ & $0.750$ & in-domain control \\
-Natural Questions& $\approx\!150$k & $1.15\%$ & --- & released poison \\
-HotpotQA         & $\approx\!150$k & $9.06\%$ & --- & released poison \\
+Security SE      & $100{,}000$   & $0.24\%$ & $0.750$ & in-domain \\
+NaturalQuestions& $\approx\!150$k & $1.15\%$ & --- & released \\
+HotpotQA         & $\approx\!150$k & $9.06\%$ & --- & released \\
 Multi-site SE    & $1{,}000{,}000$ & --- & $0.748$ & scale \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
-\begin{table}[t]
+
+
+
+\begin{table}[H]
 \centering
 \caption{Frozen detector constants. No value is tuned per corpus, per density, or per encoder;
 $K$ and the operating point are swept only as sensitivity analyses
@@ -2046,7 +2035,7 @@ seeds & $42,7,123$ & calibration partitions \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[H]
 \centering
 \caption{Software environment per platform. Detection agrees to $<5\times10^{-7}$ across these
 despite different Python, PyTorch, FAISS and sentence-transformers builds---the decision is a
@@ -2066,49 +2055,64 @@ S-T     & $3.0.1$ & $5.3.0$ & $5.2.2$ \\
 \end{tabular}
 \end{table}
 
-\section{Deployment Guidance}
-\label{app:guidance}
-Our results support a narrow recommendation, and we state its limits with it. A cohesion gate is
-worth deploying where the threat is the published templated attack: it costs one offline pass and
-sub-millisecond per query, needs no LLM, no decoder access and no registration authority, holds
-its operating point across encoders and hardware, and---measured end to end---removes all of the
-answer corruption that attack produces. For an operator whose realistic adversary is an
-opportunistic injector reusing published tooling, that is a favourable trade.
 
-It belongs behind controls that do not depend on the attacker's text---provenance on the
-ingestion path, rate and origin limits on who may write to the corpus, and review of documents
-entering through low-trust channels---and deployed there it is a precise instrument: a filter for
-known attack structure, with a characterized envelope and a known edge. What it does not do is
-bound the adversary, and an operator should size it accordingly, since an attacker who reads this
-paper can evade it with one paraphrase per target. The geometric signal tells you when someone
-has used the standard attack; it cannot tell you that nobody has attacked.
 
-\section{What Would Close the Boundary}
-\label{app:future}
-The blind spot is informative about what a repair must do. Host-anchored clones defeat cohesion
-because they are, geometrically, ordinary documents: they sit where a benign document sits,
-because they were built from one. Any statistic computed \emph{only} from the corpus embedding
-geometry therefore has no signal to read---which our failed $s_{nd}$ repair demonstrates rather
-than assumes. Three directions do not share that limitation. Provenance breaks the symmetry
-without looking at content at all, at the cost of an authority the offline setting was chosen to
-avoid. Cross-encoder or entailment scoring between a passage and the claim it supports reads
-meaning rather than position, and would see that a clone's payload contradicts its host's own
-content; it costs a second model, though not necessarily a generative one. Retrieval-time
-consistency---asking whether the documents retrieved for one query agree with each other---is
-what the per-query filters already approximate, and pairing it with a corpus-level statistic is
-the obvious hybrid our results argue for, since the two fail on disjoint inputs.
+\begin{table*}[t]
+\centering
+\caption{Cross-platform reproduction on a byte-identical, hash-verified corpus (SHA-256
+\texttt{28ec3811}$\dots$): \emph{identical} detection across CUDA and Apple-Silicon
+backends---the gap, SNR, and $0\%$ templated poison-evasion match on every platform,
+density, and seed (the two re-embedded external machines agree on the gap to within
+$5\times10^{-7}$)---at $13$--$38$\,ms per query.}
+\label{tab:xplat}
+\begin{tabular}{llcccc}
+\toprule
+Platform & Backend & Gap ($1$--$10\%$) & SNR & Templ.\ evasion & Latency mean/p95 \\
+\midrule
+RTX 5080 (desktop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $13.4$--$15.7$\,/\,$\le\!18.8$\,ms \\
+RTX 4060 (laptop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $38.1$\,/\,$43.6$\,ms \\
+Apple M4 (laptop) & MPS & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $28.1$\,/\,$37.3$\,ms \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
-\section{Ethics and Responsible Disclosure}
-\label{app:ethics}
-This work evaluates a defense, but the boundary we report is an attack technique, and we describe
-it in enough detail to reproduce. We judged disclosure appropriate on three grounds. The
-construction is not novel or difficult---it is copy, paraphrase, splice, and requires no gradient
-access, no optimization and no model internals; an adversary willing to spend one LLM call per
-target would find it. It defeats a defense family that is being actively proposed for deployment,
-so operators need it to calibrate what they are buying. And withholding it would leave our own
-positive results overstated, which is the failure mode this paper exists to correct. No live
-system was attacked: every experiment runs on a locally constructed corpus with synthetic
-payloads, and the released artifacts contain no real credentials or personal data.
+\begin{table*}[t]
+\centering
+\caption{Encoder-invariance: the geometric gate across three embedding lineages on the
+identical hash-verified in-domain corpus, each calibrated non-oracle in its correct
+symmetric convention. Templated poison-evasion is $0\%$ for all three; the absolute gap
+shrinks only as the clean manifold concentrates (clean coherence $0.751\!\to\!0.881$),
+while the scale-normalized SNR holds. Values span $1$--$10\%$ density.}
+\label{tab:encoder}
+\begin{tabular}{llccccc}
+\toprule
+Encoder & Lineage & Clean coh. & Poison coh. & Gap & SNR & Templ.\ evasion \\
+\midrule
+bge-large   & BAAI      & $0.751$ & $0.990$ & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ \\
+e5-large-v2 & Microsoft & $0.866$ & $0.990$ & $+0.122$ to $+0.127$ & $6.4$--$6.7$ & $\mathbf{0\%}$ \\
+gte-large   & Alibaba   & $0.881$ & $0.996$ & $+0.113$ to $+0.117$ & $5.2$--$5.3$ & $\mathbf{0\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Validation at million-document scale: $N=1{,}000{,}000$, a broader hash-gated
+technical corpus (SHA-256 \texttt{317eb43c}$\dots$---\emph{distinct} from the
+cross-platform corpus of the main paper). Latency is $15.0$\,ms mean / $18.2$\,ms p95,
+of which retrieval and gate are $\approx\!0.4$\,ms (sub-millisecond at $10\times$ scale);
+poison-evasion is $0\%$, the gap density-invariant, and the non-oracle document-FPR
+$0.70\%$. The poison budget fills $1\%$ and $5\%$; $10\%$ exceeds it. Three seeds.}
+\label{tab:scale}
+\begin{tabular}{lccccc}
+\toprule
+Density & $n_{\mathrm{poison}}$ & Gap & SNR & Evasion & Doc-FPR \\
+\midrule
+$1\%$ & $10{,}000$ & $+0.245$ & $5.63$ & $\mathbf{0\%}$ & $0.68\%$ \\
+$5\%$ & $50{,}000$ & $+0.249$ & $5.57$ & $\mathbf{0\%}$ & $0.72\%$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \bibliographystyle{IEEEtran}
 \begin{thebibliography}{99}
