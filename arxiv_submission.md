@@ -33,9 +33,15 @@ are pgfplots/TikZ; there are no external image dependencies. Upload the `.tex` a
 Extended version. 21 pages, 11 figures, 25 tables. Artifacts and reproduction scripts:
 https://github.com/varadharajanv0310/SEVA-RAG
 
-## Still needs a decision from you
+## Authors (as they appear on the paper)
 
-- **Author name and affiliation.** The paper currently carries
-  `Anonymous Author(s) / Manuscript submitted for blind review`, which must be replaced
-  before posting — arXiv is not blind-reviewed. This is the one hard blocker I cannot
-  resolve without you.
+- **V. Varadharajan** (primary author) --- Independent Researcher
+- **Abishek V. P. T.** --- Independent Researcher
+
+Enter both in arXiv's author field in this order. arXiv wants them one per line as
+`Varadharajan, V.` and `V. P. T., Abishek`, or in the "Name, Name" form -- either is
+accepted; the PDF byline is what readers see and it is already set.
+
+## Status
+
+Ready to submit. No blockers remain.
