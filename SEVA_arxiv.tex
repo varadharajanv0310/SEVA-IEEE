@@ -75,10 +75,10 @@ corpus, the $O(\log N)$ claim measured, not extrapolated), and SEVA runs in $13$
 per query with no LLM, API, or pre-registration; in a reproduced, shared-corpus,
 matched-FPR head-to-head it catches 100\% of templated poison to the per-query state of
 the art's $\sim$89\%, which that baseline reaches only at a false-positive rate that
-discards roughly half the clean corpus. SEVA is deliberately scoped to one dominant
-attack family---templated multi-passage injection, defended across domains, adaptive
-adversaries, encoders, and hardware; single-document injections crafted to mimic the
-clean distribution are a separate problem, stated as such.
+discards roughly half the clean corpus. SEVA is deliberately scoped to one dominant attack
+family---templated multi-passage injection---and defended across domains, adaptive adversaries,
+encoders, and hardware; within that scope it is, to our knowledge, the first cohesion-based
+detector whose operating envelope and failure boundary are both measured rather than assumed.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -912,10 +912,9 @@ $1.47$, against the $3.16$ a $1/\sqrt{n}$ decay would give). We therefore report
 the reason a deviation of this kind must shrink, and the measurements as what it does, without
 claiming the data exhibit the rate.
 
-\emph{Scope.} This is a measurement at three corpus sizes ($10{,}000$, $100{,}000$,
-$1{,}000{,}000$), not a rate result: the deviation is smaller at $10^{6}$ than at $10^{4}$, and
-that is the whole of the claim. The largest point also uses a broader corpus
-(\S\ref{subsec:scale}), so we report the direction, fit no exponent, and do not extrapolate.
+\emph{Scope.} Established at three corpus sizes spanning two decades ($10{,}000$,
+$100{,}000$, $1{,}000{,}000$). Because the largest point also uses a broader corpus
+(\S\ref{subsec:scale}), we report the direction, fit no exponent, and do not extrapolate.
 
 \subsection{Encoder-Invariance}
 \label{subsec:encoder}
@@ -1111,15 +1110,15 @@ offline LLM to preserve meaning while changing surface form, then splices in the
 injected passage is anchored to a \emph{different} benign document, so its $K$-nearest
 neighbours are that host's neighbourhood rather than its own siblings.
 
-The gate does not see this attack. At one clone per target---the configuration the attack is
-built for, since each passage is anchored to a \emph{different} host---clone cohesion averages
-$0.751$ against $\tau=0.841$, below the gate for \emph{every} one of $50$ targets ($100\%$
-poison-evasion), while $84\%$ remain retrieved at $K=5$. Multiplicity rescues detection only
-partially, and at the attacker's own expense: raising the injection from $1$ to $5$ clones per
-target moves mean cohesion from $0.722$ to $0.790$ and the gate's catch rate from $0\%$ to
-$22.7\%$ (evasion $100\%\to77.3\%$), because clones that share a payload start to resemble one
-another---the mutual similarity the attack exists to avoid. The adversary's best configuration
-is therefore the single anchored clone, and that is the one the gate never sees. Nor does the complementary signal: nearest-neighbour
+The gate does not see this attack. Each clone is anchored to a \emph{different} host, so
+one clone per target is the configuration the attack is built for---and there it is invisible:
+clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for \emph{every} one of
+$50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at $K=5$. Raising the
+injection to five clones per target is the only thing that moves the statistic, and it moves it
+against the attacker rather than for him, since clones sharing a payload begin to resemble one
+another---the mutual similarity the attack exists to avoid (\S\ref{subsec:boundary} reports the
+sweep). The adversary's optimum is therefore the single anchored clone, and that is the one the
+gate never sees. Nor does the complementary signal: nearest-neighbour
 duplication $s_{nd}$, which flags templated poison perfectly, catches only $13$--$20\%$ of
 clones, and a two-signal union gate at the same $0.69\%$ budget reaches just $6.7$--$33.3\%$.
 
@@ -1337,14 +1336,18 @@ We presented SEVA, a lightweight, LLM-free detector of templated multi-passage c
 poisoning built on a single geometric signal operated as a hard gate, and used it to
 characterize what cohesion-based detection can and cannot do. In-domain under frozen,
 non-oracle calibration it detects the attack at $0\%$ poison-evasion across three seeds at
-$0.58\%$ document-FPR, catches PoisonedRAG's own poison at $82$--$98\%$ across three corpora,
+$0.56\%$ document-FPR, catches PoisonedRAG's own poison at $82$--$98\%$ across three corpora,
 and beats the per-query state of the art in a reproduced, matched-FPR head-to-head---at
 $13$--$38$\,ms per query, invariant to contamination density, embedding encoder, and hardware
 backend, and measured to $10^6$ documents. We also delimit the assumption underlying the whole
 cohesion-detection family: host-anchored cloning evades the gate entirely while remaining
 retrievable, no complementary geometric signal we tested closes the gap, and the bypass is not
-expensive---it corrupts more targets than the attack it replaces. Detecting injections that leave no
-duplication footprint, without an LLM in the loop, remains open.
+expensive---it corrupts more targets than the attack it replaces. Reproducing CleanBase at a
+matched operating point reproduces that boundary exactly, which places it in the shared
+mutual-similarity assumption rather than in our statistic. Knowing where a defense stops is
+what lets an operator deploy it deliberately, and that boundary---not the signal---is what this
+paper contributes. Detecting injections that leave no duplication footprint, without an LLM in
+the loop, remains open.
 
 \appendices
 

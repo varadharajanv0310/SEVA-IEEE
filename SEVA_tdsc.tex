@@ -75,10 +75,10 @@ corpus, the $O(\log N)$ claim measured, not extrapolated), and SEVA runs in $13$
 per query with no LLM, API, or pre-registration; in a reproduced, shared-corpus,
 matched-FPR head-to-head it catches 100\% of templated poison to the per-query state of
 the art's $\sim$89\%, which that baseline reaches only at a false-positive rate that
-discards roughly half the clean corpus. SEVA is deliberately scoped to one dominant
-attack family---templated multi-passage injection, defended across domains, adaptive
-adversaries, encoders, and hardware; single-document injections crafted to mimic the
-clean distribution are a separate problem, stated as such.
+discards roughly half the clean corpus. SEVA is deliberately scoped to one dominant attack
+family---templated multi-passage injection---and defended across domains, adaptive adversaries,
+encoders, and hardware; within that scope it is, to our knowledge, the first cohesion-based
+detector whose operating envelope and failure boundary are both measured rather than assumed.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -853,23 +853,7 @@ Density & Clean coh. & Poison coh. & Gap & SNR \\
 \addlegendentry{$0.69\%$ target}
 \end{axis}
 \end{tikzpicture}
-
-\vspace{0.8ex}
-
-\begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=3.3cm,
-  xlabel={contamination density (\%)}, ylabel={coherence gap},
-  xmin=0, xmax=11, ymin=0.11, ymax=0.33, xtick={1,5,10},
-  legend pos=north west, legend columns=3, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\tiny, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
-\addplot[thick, black!45, mark=square*] coordinates {(1,0.1411) (5,0.2813) (10,0.2789)};
-\addlegendentry{$N=10$k}
-\addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
-\addlegendentry{$N=100$k}
-\addplot[thick, orange!85!black, mark=triangle*] coordinates {(1,0.2454) (5,0.2489)};
-\addlegendentry{$N=1$M}
-\end{axis}
-\end{tikzpicture}
-\caption{Calibration scaling and density-invariance across corpus size. \emph{Top:} realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M---the deviation does not grow with $N$ (Observation~2). \emph{Bottom:} the cluster-coherence gap per contamination density; the $100$k and $1$M curves are flat, while at $10$k the gap collapses at $1\%$ density. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
+\caption{Calibration scaling and density-invariance across corpus size. Realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M: the deviation does not grow with $N$ (Observation~2). The per-density coherence gap behind it is tabulated in Table~\ref{tab:coh}. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
 \label{fig:scaling}
 \end{figure}
 The deployed threshold $\tau$ is calibrated non-oracle, as the $(1-0.0069)$
@@ -901,14 +885,14 @@ with probability $1-\delta$, the second inequality being the
 Dvoretzky--Kiefer--Wolfowitz bound~\cite{dkw}. The deviation therefore decays as
 $O(1/\sqrt{n})$ in the number of \emph{clean} calibration documents---a property of the
 calibration set alone, independent of the attack. The bound is distribution-free and hence
-loose---$12$--$18\times$ wider than the realized deviation at every $N$---and the three
-measured deviations do not follow the rate it predicts (ratios $4.74$ and $1.47$ against the
-$3.16$ of a $1/\sqrt{n}$ decay). We report the bound as the reason such a deviation must
-shrink, and the measurements as what it does, without claiming the data exhibit the rate.
+loose---$12$--$18\times$ wider than the realized deviation at every $N$---so we report it for
+the mechanism, not as a numerical prediction: the deviation is a uniform-convergence quantity
+bounded by the calibration sample alone. The measured points shrink faster than the bound
+requires at the first decade and slower at the second, so we claim the direction, not a rate.
 
-\emph{Scope.} This is a measurement at three corpus sizes, not a rate result: the deviation
-is smaller at $10^{6}$ than at $10^{4}$, and that is the whole of the claim. The largest point
-also uses a broader corpus (\S\ref{subsec:scale}), so we fit no exponent and do not extrapolate.
+\emph{Scope.} Established at three corpus sizes spanning two decades. Because the largest
+point also uses a broader corpus (\S\ref{subsec:scale}), we report the direction, fit no
+exponent, and do not extrapolate beyond $10^{6}$.
 
 \subsection{Encoder-Invariance}
 \label{subsec:encoder}
@@ -1105,14 +1089,15 @@ preserve meaning while changing surface form, then splices in the payload. Each
 injected passage is anchored to a \emph{different} benign document, so its $K$-nearest
 neighbours are that host's neighbourhood rather than its own siblings.
 
-The gate does not see this attack. At one clone per target---the configuration the attack is
-built for---clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for
-\emph{every} one of $50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at
-$K=5$. Multiplicity rescues detection only partially and at the attacker's expense: $1$ to $5$
-clones per target moves mean cohesion $0.722\to0.790$ and catch $0\%\to22.7\%$ (evasion
-$100\%\to77.3\%$), because clones sharing a payload begin to resemble one another---the mutual
-similarity the attack exists to avoid. The adversary's best configuration is the single
-anchored clone, and that is the one the gate never sees. Nor does the complementary signal: nearest-neighbour
+The gate does not see this attack. Each clone is anchored to a \emph{different} host, so
+one clone per target is the configuration the attack is built for---and there it is invisible:
+clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for \emph{every} one of
+$50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at $K=5$. Raising the
+injection to five clones per target is the only thing that moves the statistic, and it moves it
+against the attacker rather than for him, since clones sharing a payload begin to resemble one
+another---the mutual similarity the attack exists to avoid (\S\ref{subsec:boundary} reports the
+sweep). The adversary's optimum is therefore the single anchored clone, and that is the one the
+gate never sees. Nor does the complementary signal: nearest-neighbour
 duplication $s_{nd}$, which flags templated poison perfectly, catches only $13$--$20\%$ of
 clones, and a two-signal union gate at the same $0.69\%$ budget reaches just $6.7$--$33.3\%$.
 
@@ -1312,14 +1297,17 @@ We presented SEVA, a lightweight, LLM-free detector of templated multi-passage c
 poisoning built on a single geometric signal operated as a hard gate, and used it to
 characterize what cohesion-based detection can and cannot do. In-domain under frozen,
 non-oracle calibration it detects the attack at $0\%$ poison-evasion across three seeds at
-$0.58\%$ document-FPR, catches PoisonedRAG's own poison at $82$--$98\%$ across three corpora,
+$0.56\%$ document-FPR, catches PoisonedRAG's own poison at $82$--$98\%$ across three corpora,
 and beats the per-query state of the art in a reproduced, matched-FPR head-to-head---at
 $13$--$38$\,ms per query, invariant to contamination density, embedding encoder, and hardware
 backend, and measured to $10^6$ documents. We also delimit the assumption underlying the whole
 cohesion-detection family: host-anchored cloning evades the gate entirely while remaining
 retrievable, no complementary geometric signal we tested closes the gap, and the bypass is not
-expensive---it corrupts more targets than the attack it replaces. Detecting injections that leave no
-duplication footprint, without an LLM in the loop, remains open.
+expensive---it corrupts more targets than the attack it replaces. Reproducing CleanBase at a
+matched point reproduces that boundary exactly, placing it in the shared mutual-similarity
+assumption rather than in our statistic. That boundary---not the signal---is the contribution:
+knowing where a defense stops is what lets an operator deploy it deliberately. Detecting
+injections that leave no duplication footprint, without an LLM, remains open.
 
 \noindent\emph{Supplementary material.} Per-seed confusion matrices, per-condition rates,
 attack construction, calibrated thresholds, per-encoder and per-platform detail, and the
