@@ -1,4 +1,4 @@
-\documentclass[10pt,journal,compsoc]{IEEEtran}
+\documentclass[lettersize,journal]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
@@ -462,6 +462,27 @@ Natural Questions & 1.15\% & \textbf{82\%} & 0\%  & 52\% & 18\% \\
 HotpotQA          & 9.06\% & \textbf{97\%} & 0\%  & 98\% & 3\% \\
 \bottomrule
 \end{tabular}}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{In-domain \texttt{cluster\_coh} geometry across contamination density
+(Security Stack Exchange, $100{,}000$ documents). The poison--clean gap and its
+SNR are density-invariant and \emph{larger} than the $\approx\!4.7$ SNR the same
+signal shows against a general-domain corpus---the gap reads template homogeneity,
+not domain contrast. The encoder-invariance and cross-platform results
+(the encoder-invariance section of the main paper, the cross-platform section of the main paper) report an independently re-embedded measurement of
+this bge geometry, agreeing with the values here up to third-decimal re-embedding differences.}
+\label{tab:coh}
+\begin{tabular}{lcccc}
+\toprule
+Density & Clean coh. & Poison coh. & Gap & SNR \\
+\midrule
+1\%  & 0.7518 & 0.9871 & $+0.2353$ & 5.99 \\
+5\%  & 0.7526 & 0.9909 & $+0.2384$ & 6.00 \\
+10\% & 0.7466 & 0.9939 & $+0.2474$ & 5.78 \\
+\bottomrule
+\end{tabular}
 \end{table}
 
 \end{document}

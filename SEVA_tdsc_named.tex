@@ -35,8 +35,7 @@ Templated Corpus Poisoning in\\
 Retrieval-Augmented Generation}
 
 \author{V.~Varadharajan and Abishek~V.~P.~T.%
-\IEEEcompsocitemizethanks{\IEEEcompsocthanksitem Both authors are independent researchers.\protect\\
-E-mail: vv0366@srmist.edu.in}}
+\IEEEcompsocitemizethanks{\IEEEcompsocthanksitem Both authors are independent researchers. E-mail: vv0366@srmist.edu.in}}
 
 \maketitle
 
@@ -528,7 +527,7 @@ poison passage are almost exclusively \emph{other passages from the same injecte
 cluster}, whatever fraction of the corpus is poisoned. In-domain we observe clean
 coherence $\approx 0.75$ and templated-poison coherence $\approx 0.99$, a gap of
 $+0.235$ to $+0.247$ (SNR $5.8$--$6.0$) that is essentially flat across $1$--$10\%$
-contamination (Table~\ref{tab:coh}).
+contamination (supplement).
 Computing the statistic is a one-time $O(NK)$ pass over the corpus index, amortized
 across all subsequent queries; because embeddings are $\ell_2$-normalized, each
 cosine is an inner product, and the marginal cost at detection time is a
@@ -635,7 +634,7 @@ LLM, CPU-only, one precomputed statistic.
 different failure modes. The primary corpus is an in-domain Security Stack
 Exchange question--answer corpus of $100{,}000$ documents, deduplicated, with
 whole-corpus clean cluster-coherence $0.705$ (the mean over retrieved evaluation
-neighbourhoods, the quantity Table~\ref{tab:coh} reports, is $\approx\!0.75$).
+neighbourhoods, the quantity the supplement reports, is $\approx\!0.75$).
 It is a deliberate \emph{domain-confound control}: clean and poison are drawn from
 the same security domain, so a detector relying on topic contrast---security text
 against general-domain prose---is denied its shortcut. Most prior defense
@@ -775,7 +774,7 @@ Tier & Density & Evasion (\%) & Doc-FPR (\%) \\
 \subsection{Density-Invariant Geometry}
 \label{subsec:geom}
 The signal underlying the L1 result is the cluster-coherence gap
-(Table~\ref{tab:coh}): in-domain, clean documents sit at coherence $\approx 0.75$
+(supplement): in-domain, clean documents sit at coherence $\approx 0.75$
 and templated poison at $\approx 0.99$, and the separation does not move with
 contamination density. We state this as a formal property of the attack geometry.
 
@@ -788,7 +787,7 @@ evaluated $1$--$10\%$ range.}
 
 \emph{Evidence.} The gap is $+0.235$, $+0.238$, and $+0.247$ at $1\%$, $5\%$, and
 $10\%$ density---a total spread of $0.012$---at an SNR of $5.99$, $6.00$, and $5.78$
-(Table~\ref{tab:coh}); neither quantity shows systematic density dependence. It is
+(supplement); neither quantity shows systematic density dependence. It is
 equally seed-invariant: the gap is identical across calibration seeds $42$, $7$, and
 $123$, because it is a property of the corpus and the injected cluster, not of the
 benign calibration split.
@@ -819,27 +818,6 @@ Frozen, non-oracle, held-out calibration confirms the operational consequence: a
 threshold fit on a disjoint reference half of the attack and then frozen catches the
 held-out half at $0\%$ poison-evasion and $0.58\%$ document-FPR.
 
-\begin{table}[t]
-\centering
-\caption{In-domain \texttt{cluster\_coh} geometry across contamination density
-(Security Stack Exchange, $100{,}000$ documents). The poison--clean gap and its
-SNR are density-invariant and \emph{larger} than the $\approx\!4.7$ SNR the same
-signal shows against a general-domain corpus---the gap reads template homogeneity,
-not domain contrast. The encoder-invariance and cross-platform results
-(\S\ref{subsec:encoder}, \S\ref{subsec:eff}) report an independently re-embedded measurement of
-this bge geometry, agreeing with the values here up to third-decimal re-embedding differences.}
-\label{tab:coh}
-\begin{tabular}{lcccc}
-\toprule
-Density & Clean coh. & Poison coh. & Gap & SNR \\
-\midrule
-1\%  & 0.7518 & 0.9871 & $+0.2353$ & 5.99 \\
-5\%  & 0.7526 & 0.9909 & $+0.2384$ & 6.00 \\
-10\% & 0.7466 & 0.9939 & $+0.2474$ & 5.78 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \subsection{Calibration Scaling}
 \label{subsec:calib}
 
@@ -856,7 +834,7 @@ Density & Clean coh. & Poison coh. & Gap & SNR \\
 \addlegendentry{$0.69\%$ target}
 \end{axis}
 \end{tikzpicture}
-\caption{Calibration scaling and density-invariance across corpus size. Realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M: the deviation does not grow with $N$ (Observation~2). The per-density coherence gap behind it is tabulated in Table~\ref{tab:coh}. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
+\caption{Calibration scaling and density-invariance across corpus size. Realized non-oracle document-FPR against the $0.69\%$ target at $10$k, $100$k and $1$M: the deviation does not grow with $N$ (Observation~2). The per-density coherence gap behind it is tabulated in the supplement. Density-invariance is a large-corpus property, and we plot where it fails rather than omitting it.}
 \label{fig:scaling}
 \end{figure}
 The deployed threshold $\tau$ is calibrated non-oracle, as the $(1-0.0069)$
@@ -1225,7 +1203,7 @@ Cluster coherence is a group-cohesion signal, not the pairwise near-duplicate sc
 deduplicator computes---and that difference is what the cross-domain results expose. Averaging
 similarity over a $K$-neighbour group rather than a single nearest neighbour, it reads the
 multi-passage \emph{cluster} an injection forms, giving it two properties a pairwise method
-lacks: a separation invariant to how large that cluster grows (Table~\ref{tab:coh}), and
+lacks: a separation invariant to how large that cluster grows (supplement), and
 detection of a passage even when no clean document is its near-twin. Against lexical
 filtering---PoisonedRAG's own tested defense---this is decisive: corpus-fragile filtering fails
 where benign duplication is high while cluster coherence holds. Against embedding deduplication
