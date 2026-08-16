@@ -5,7 +5,7 @@ Everything here is the plain-text form arXiv's web form expects. The PDF abstrac
 
 ## Title
 
-SEVA: Characterizing and Delimiting Cohesion-Based Detection of Corpus Poisoning in Retrieval-Augmented Generation (Extended Version)
+SEVA: Lightweight, LLM-Free Detection of Templated Corpus Poisoning in Retrieval-Augmented Generation, and the Boundary of Cohesion-Based Defense (Extended Version)
 
 ## Categories
 

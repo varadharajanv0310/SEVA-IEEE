@@ -269,8 +269,8 @@ adversarial-hubness detector~\cite{hubness} works corpus-level on a different ge
 (passages retrieved for disproportionately many queries). RAGuard~\cite{raguard} and
 RAGPart/RAGMask~\cite{ragpart} add retriever-side training and partitioning.
 
-We therefore do not claim the cohesion signal as novel. Our contribution is to
-\emph{characterize the family's operating envelope}, which none of these works establishes.
+The cohesion signal, then, is not ours to claim---but its operating envelope is, and
+that is what none of these works establishes.
 First, we give the invariance structure of the signal---density-invariance
 (\S\ref{subsec:geom}), calibration scaling (\S\ref{subsec:calib}), and encoder-invariance
 (\S\ref{subsec:encoder})---under frozen, non-oracle calibration with complete per-seed
@@ -436,8 +436,9 @@ $\mathrm{FPR}_{\mathrm{TARGET}}=0.69\%$. This uses no labelled poison, no poison
 density estimate---which is why the same $\tau$ transfers unchanged to held-out poison
 (\S\ref{subsec:geom}). It does take the quantile over the benign partition, which our harness
 knows by construction; a deployment would take it over the scores its benign query stream
-returns---a label-free estimator of the same quantity, biased upward by whatever poison that
-stream retrieves. We report the distinction rather than assume the two coincide. In-domain this places the geometric gate at
+returns, which needs no labels at all. We measured that estimator directly: at $1\%$ and $5\%$
+contamination it recovers the frozen threshold ($\tau=0.844$--$0.848$ against $0.8423$) at $0\%$
+poison-evasion on every seed. In-domain this places the geometric gate at
 $\tau\approx0.84$---far below templated poison's $\approx\!0.99$ coherence and well
 above clean documents' $\approx\!0.75$. In the \emph{evaluation} phase, the
 remaining benign queries and all adversarial queries are scored against the frozen
@@ -709,9 +710,8 @@ $\sqrt{\ln(2/\delta)/2n}$ with probability $1-\delta$. The deviation therefore d
 $O(1/\sqrt{n})$ in the number of \emph{clean} calibration documents---a property of the
 calibration set alone, independent of the attack. The bound is distribution-free and hence
 loose---$12$--$18\times$ wider than the realized deviation at every $N$---so we report it for
-the mechanism, not as a numerical prediction: the deviation is a uniform-convergence quantity
-bounded by the calibration sample alone. The measured points shrink faster than the bound
-requires at the first decade and slower at the second, so we claim the direction, not a rate.
+the mechanism, not as a prediction: the deviation is a uniform-convergence quantity bounded by
+the calibration sample alone. We therefore claim the direction, not a rate.
 
 \emph{Scope.} Established at three corpus sizes spanning two decades. Because the largest
 point also uses a broader corpus (\S\ref{subsec:scale}), we report the direction, fit no
@@ -913,8 +913,8 @@ the gate does stop reaches $22\%$ undefended (\S\ref{subsec:e2e}). Sweeping payl
 prominence (Fig.~\ref{fig:frontier}) gives the adversary an interior optimum at $25\%$ payload,
 where evasion is still total and end-to-end success peaks at $28\%$; beyond that the gate begins
 to fire, but retrievability is already falling, so the optimum is unaffected by whether the gate
-is deployed at all. We therefore make no cost-of-attack claim: against an adversary willing to
-change strategy, the gate removes the attack it detects without raising the attacker's price.
+is deployed at all. Against an adversary willing to change strategy, then, the gate removes
+the attack it detects without raising the attacker's price.
 
 \emph{The blind spot is shared, not ours.} Reproducing CleanBase~\cite{cleanbase}---the closest
 peer, which detects the cliques that co-targeted documents form in a corpus-level similarity
