@@ -50,13 +50,13 @@ templated multi-passage poisoning, the dominant published attack pattern
 (PoisonedRAG). In-domain, where clean and poison share the \emph{same} security domain
 and a geometric signal has no topic shortcut, SEVA drives templated poison-evasion to
 0\% across three seeds---a 95\% Wilson upper bound of 0.0154\% from 25{,}000 templated
-encounters at the frozen gate---at a 0.58\% document-level false-positive rate, under
+encounters at the frozen gate---at a 0.56\% document-level false-positive rate, under
 frozen non-oracle calibration and 1--10\% contamination density. On PoisonedRAG's
 \emph{own released} poison for the field's general-domain benchmarks (Natural Questions,
 HotpotQA), and a faithful black-box build on the in-domain Security corpus, it catches
 the attack at 82--98\%, while the lexical duplicate filtering PoisonedRAG itself found
 insufficient proves corpus-fragile at matched false-positive rate. End to end the gate prevents
-all the corruption it detects: the templated attack corrupts 18\% of targets undefended and 0\%
+all the corruption it detects: the templated attack corrupts 22\% of targets undefended and 0\%
 with the gate in the loop. We then delimit the assumption it rests on. \emph{Host-anchored
 cloning}---one benign host mimicked per injected passage---evades the gate on every target while
 staying retrievable, no complementary geometric signal we tested closes the gap, and the bypass
@@ -67,7 +67,7 @@ mutual-similarity assumption rather than to our statistic. The signal is \emph{e
 templated-poison detection generalizes across three embedding models of independent
 lineages, bge (BAAI), e5 (Microsoft), and gte (Alibaba)---and \emph{reproducible to
 within $5\times10^{-7}$} across two accelerator backends (CUDA and Apple Silicon) on a
-byte-identical, hash-verified corpus, several cells bit-identical. Detection stays flat
+byte-identical, hash-verified corpus. Detection stays flat
 to a million documents (sub-millisecond retrieval-plus-gate cost at $10\times$ the primary
 corpus, the $O(\log N)$ claim measured, not extrapolated), and SEVA runs in $13$--$38$\,ms
 per query with no LLM, API, or pre-registration; in a reproduced, shared-corpus,
@@ -146,8 +146,8 @@ shared-corpus, matched-FPR head-to-head against the per-query state of the
 art.
 Across this protocol SEVA catches all templated poison in-domain at 0\% poison-evasion,
 and PoisonedRAG's own poison at 82--98\% across three corpora (released on Natural
-Questions and HotpotQA; a faithful black-box---the authors' released attack code---on
-the Security corpus), while lexical
+Questions and HotpotQA; a faithful black-box re-implementation of their released
+construction on the Security corpus, for which no poison is published), while lexical
 duplicate filtering---the defense PoisonedRAG itself tested---fails entirely at
 matched false-positive rate on duplicate-dense corpora.
 
@@ -163,7 +163,7 @@ GPU, a laptop GPU, and an Apple-Silicon laptop, and stays flat to a million docu
 with no LLM call, external API, or cryptographic pre-registration.
 
 \item \textbf{C2 --- Cross-domain detection of the dominant attack.} SEVA detects templated
-multi-passage poisoning at 0\% poison-evasion across three seeds and 0.58\% document-FPR under
+multi-passage poisoning at 0\% poison-evasion across three seeds and 0.56\% document-FPR under
 frozen, non-oracle calibration, and catches PoisonedRAG's released poison on Natural Questions
 (82\%) and HotpotQA (97\%) and a faithful black-box build on the in-domain Security corpus
 (98\%).
@@ -249,8 +249,9 @@ reintroduces exactly the per-query LLM call that on-device deployment is trying 
 avoid. RAGDefender~\cite{ragdefender} is the closest peer to SEVA---an LLM-free
 post-retrieval ML filter reporting roughly 7.5--12.5\% attack-success at about
 1\% density, and, like SEVA, it evaluates an adaptive adversary of its own. We
-take RAGDefender as our head-to-head baseline and reproduce it on a shared corpus
-and attack at matched false-positive rate.
+take RAGDefender as our head-to-head baseline: we reproduce its published filter to obtain
+its benign strip rate on a shared corpus and attack, and compare detection against a per-query
+ablation of cluster coherence at matched false-positive rate.
 SEVA occupies the gap none of these fill: a corpus-level, LLM-free detector with
 no decoder access, no pre-registration, and millisecond latency on laptop-class
 hardware.
@@ -427,13 +428,16 @@ $3.5\times$ at no cost to detection.
 \end{algorithm}
 
 \subsection{Density-Agnostic, Non-Oracle Calibration}
-SEVA's threshold is calibrated with no knowledge of the poison, in two phases over
-a fixed pool of benign queries. In the \emph{calibration} phase, benign queries are
-issued against the (possibly poisoned) corpus; for every retrieved document the
-detection score is computed, and $\tau$ is set to the
-$(1-\mathrm{FPR}_{\mathrm{TARGET}})$ quantile of the resulting clean-score
-distribution by 50-iteration binary search, with
-$\mathrm{FPR}_{\mathrm{TARGET}}=0.69\%$. In-domain this places the geometric gate at
+SEVA's threshold is calibrated with no knowledge of the poison and no oracle over the
+contamination density, in two phases over a fixed pool of benign queries. In the
+\emph{calibration} phase $\tau$ is set to the $(1-\mathrm{FPR}_{\mathrm{TARGET}})$ quantile of
+the coherence distribution of the corpus's benign documents, by 50-iteration binary search, with
+$\mathrm{FPR}_{\mathrm{TARGET}}=0.69\%$. This uses no labelled poison, no poison scores and no
+density estimate---which is why the same $\tau$ transfers unchanged to held-out poison
+(\S\ref{subsec:geom}). It does take the quantile over the benign partition, which our harness
+knows by construction; a deployment would take it over the scores its benign query stream
+returns---a label-free estimator of the same quantity, biased upward by whatever poison that
+stream retrieves. We report the distinction rather than assume the two coincide. In-domain this places the geometric gate at
 $\tau\approx0.84$---far below templated poison's $\approx\!0.99$ coherence and well
 above clean documents' $\approx\!0.75$. In the \emph{evaluation} phase, the
 remaining benign queries and all adversarial queries are scored against the frozen
@@ -514,8 +518,9 @@ at $1\%$, $5\%$, and $10\%$ contamination---and model the adaptive adversary by
 ablating the soft signals an attacker can normalize: keyword density (tier L2) and
 keyword density plus sentence structure (tier L3). Because PoisonedRAG releases
 poison only for general-domain benchmarks, the in-domain corpus additionally
-receives a faithful black-box PoisonedRAG generated with the authors' released
-attack code (used in the cross-corpus comparison, \S\ref{subsec:lex}). On the
+receives a faithful black-box PoisonedRAG built to the authors' released
+construction---our re-implementation, since no poison is published for this domain (used in
+the cross-corpus comparison, \S\ref{subsec:lex}). On the
 cross-domain corpora we inject the \emph{released} PoisonedRAG attack: the attack
 authors' own published
 adversarial passages~\cite{poisonedrag} ($100$ target queries $\times\,5$
@@ -703,13 +708,14 @@ Dvoretzky--Kiefer--Wolfowitz inequality~\cite{dkw} this is at most
 $\sqrt{\ln(2/\delta)/2n}$ with probability $1-\delta$. The deviation therefore decays as
 $O(1/\sqrt{n})$ in the number of \emph{clean} calibration documents---a property of the
 calibration set alone, independent of the attack. The bound is distribution-free and hence
-loose; we report it for the rate it predicts, which is the trend the three measured points
-follow, not as a tight numerical guarantee.
+loose---$12$--$18\times$ wider than the realized deviation at every $N$---and the three
+measured deviations do not follow the rate it predicts (ratios $4.74$ and $1.47$ against the
+$3.16$ of a $1/\sqrt{n}$ decay). We report the bound as the reason such a deviation must
+shrink, and the measurements as what it does, without claiming the data exhibit the rate.
 
-\emph{Scope.} The deviation shrinks at three corpus sizes ($10{,}000$, $100{,}000$,
-$1{,}000{,}000$)---the direction the $O(1/\sqrt{N})$ argument implies. Because the
-largest point uses a broader corpus (\S\ref{subsec:scale}), we report the direction,
-not a fitted exponent, and do not extrapolate the rate.
+\emph{Scope.} This is a measurement at three corpus sizes, not a rate result: the deviation
+is smaller at $10^{6}$ than at $10^{4}$, and that is the whole of the claim. The largest point
+also uses a broader corpus (\S\ref{subsec:scale}), so we fit no exponent and do not extrapolate.
 
 \subsection{Encoder-Invariance}
 \label{subsec:encoder}
@@ -802,7 +808,7 @@ RAGDefender---the LLM-free, per-query state of the art~\cite{ragdefender}---on o
 Security corpus and templated attack, using SEVA's own encoder (bge-large) so the comparison
 isolates the \emph{algorithmic} difference. Two findings follow. First,
 RAGDefender's clustering filter has no no-attack gate: its grouping step always partitions a
-retrieval window and removes a side, so on benign in-domain queries it strips $50.4\%$ of clean
+retrieval window and removes a side, so on benign in-domain queries it strips $51.2\%$ of clean
 documents---not a deployable operating point, and one invisible to evaluations that never
 measure benign-query false positives. Second, to compare \emph{detection} at all we grant it an
 idealized threshold its actual filter does not expose, at a matched $\sim$0.8\% benign
@@ -842,9 +848,9 @@ accumulated over a multi-document retrieval window, inflate the rate at which wh
 Because PoisonedRAG injects five passages per target query, a genuine
 attack lights up several retrieved documents while benign false positives are
 typically isolated; flagging a query only when $\geq\!2$ of its retrieved documents
-are flagged cuts the benign query-level false-positive rate from $3.15\%$ to
-$0.90\%$---a $3.5\times$ reduction---while the poison catch rate is unchanged at
-$98\%$.
+are flagged cuts the benign query-level false-positive rate from $3.06\%$ to
+$0.97\%$---a $3.2\times$ reduction, means over the nine in-domain conditions---while the
+poison catch rate is unchanged at $98\%$.
 
 \begin{figure}[t]
 \centering
@@ -886,11 +892,14 @@ offline LLM to preserve meaning while changing surface form, then splices in the
 injected passage is anchored to a \emph{different} benign document, so its $K$-nearest
 neighbours are that host's neighbourhood rather than its own siblings.
 
-The gate does not see this attack. Clone cohesion averages $0.751$ against $\tau=0.841$---below
-the gate for \emph{every} one of $50$ targets ($100\%$ poison-evasion), while $84\%$ remain
-retrieved at $K=5$. Multiplicity does not rescue detection: $1$ to $5$ clones per target moves
-mean cohesion only from $0.722$ to $0.790$, because each embedding is dominated by its distinct
-host rather than the shared payload. Nor does the complementary signal: nearest-neighbour
+The gate does not see this attack. At one clone per target---the configuration the attack is
+built for---clone cohesion averages $0.751$ against $\tau=0.841$, below the gate for
+\emph{every} one of $50$ targets ($100\%$ poison-evasion), while $84\%$ remain retrieved at
+$K=5$. Multiplicity rescues detection only partially and at the attacker's expense: $1$ to $5$
+clones per target moves mean cohesion $0.722\to0.790$ and catch $0\%\to22.7\%$ (evasion
+$100\%\to77.3\%$), because clones sharing a payload begin to resemble one another---the mutual
+similarity the attack exists to avoid. The adversary's best configuration is the single
+anchored clone, and that is the one the gate never sees. Nor does the complementary signal: nearest-neighbour
 duplication $s_{nd}$, which flags templated poison perfectly, catches only $13$--$20\%$ of
 clones, and a two-signal union gate at the same $0.69\%$ budget reaches just $6.7$--$33.3\%$.
 
@@ -899,7 +908,7 @@ adversary its effect, and we initially expected it to. Measured consistently it 
 the $42$ clones that evade the deployed gate and are retrieved, $31.0\%$ ($13/42$; $95\%$ Wilson
 $19.1$--$46.0\%$) corrupt the answer, an end-to-end success rate of $26\%$ over all $50$
 targets. On the \emph{same} targets, generator, and corruption criterion, the templated attack
-the gate does stop reaches only $18\%$ undefended (\S\ref{subsec:e2e}). Sweeping payload
+the gate does stop reaches $22\%$ undefended (\S\ref{subsec:e2e}). Sweeping payload
 prominence (Fig.~\ref{fig:frontier}) gives the adversary an interior optimum at $25\%$ payload,
 where evasion is still total and end-to-end success peaks at $28\%$; beyond that the gate begins
 to fire, but retrievability is already falling, so the optimum is unaffected by whether the gate
@@ -935,7 +944,7 @@ Every result so far measures whether poison is \emph{flagged}. Because the bound
 reported end to end, we close the asymmetry in the direction that tests us hardest and measure
 the templated attack the same way: retrieve, drop documents the gate flags, backfill from the
 $K_{\mathrm{FETCH}}$ over-fetch, generate, and count payload markers in the answer. Undefended,
-the attack corrupts $18\%$ of the $50$ targets and places $2.74$ poison passages in the average
+the attack corrupts $22\%$ of the $50$ targets ($11/50$) and places $2.74$ poison passages in the average
 retrieval window. With the gate in the loop both fall to zero: $0.00$ poison passages retrieved
 and $0\%$ of answers corrupted. The gate prevents all of the corruption it detects; what it does
 not detect is \S\ref{subsec:boundary}.
@@ -957,7 +966,7 @@ backends---an RTX~5080 and an RTX~4060 (CUDA) and an Apple~M4 (Metal/MPS)---each
 identical order-sensitive SHA-256 corpus hash and per-document fingerprint, the poison--clean
 gap, its SNR, and $0\%$ templated poison-evasion reproduce on every platform, density, and seed;
 the two independently re-embedded external machines agree on the gap to within $5\times10^{-7}$,
-several cells bit-identical. The separation is a property of the attack's
+The separation is a property of the attack's
 geometry, not of one GPU's manifold or one vendor's kernels---a degree of reproducibility
 uncommon in poisoning-defence evaluations, which we report as a first-class result.
 

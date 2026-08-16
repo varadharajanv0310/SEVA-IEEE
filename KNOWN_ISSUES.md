@@ -1,10 +1,11 @@
-# SEVA v6.2.1 — Known Issues & Discrepancies
+# SEVA — Known Issues & Discrepancies
 
-This file documents confirmed discrepancies between the paper (v6.2.3) and the
+This file documents confirmed discrepancies between the paper and the
 code/experimental record. Items are split by status: **FIXED** (resolved in the
 repo) and **OPEN** (require a further code or paper change).
 
-Audit date: 2026-04-30, against `main` at commit `eba1add`.
+Audit date: 2026-08-16, against `main` after the TDSC-review correction pass.
+Papers audited: `SEVA_tdsc.tex` (submission), `SEVA_arxiv.tex` (extended).
 
 ---
 
@@ -142,3 +143,37 @@ Audit date: 2026-04-30, against `main` at commit `eba1add`.
 ---
 
 *Last updated: 2026-04-30 — SEVA v6.2.3 audit.*
+
+---
+
+## OPEN (added 2026-08-16, from the TDSC-review verification pass)
+
+- **KI-010 — calibration: harness vs deployment.** `reproduction/hardgate_xrun.py:210` (and the
+  equivalent line in `scale_xrun.py`) computes `tau = percentile(ccoh, ...)` where `ccoh = coh[P:]`,
+  i.e. the quantile is taken over the corpus's benign partition, which the harness knows by
+  construction. This uses no labelled poison, no poison scores and no density estimate, so the
+  non-oracle claim holds in those senses; but a deployment has no benign partition and would take
+  the quantile over the scores its benign query stream returns. §4.3 of both papers now states the
+  distinction explicitly. **The label-free estimator has not been measured.** Closing this means
+  running it and reporting whether the gate holds.
+
+- **KI-011 — clone-attack multiplicity.** The boundary headline (100% poison-evasion) is the
+  one-clone-per-target configuration. At V=5, the multiplicity the threat model fixes for the
+  *templated* attack, `whitebox_attack_results/expA2_cloneonly_s042.json` records catch rising to
+  22.7% (evasion 77.3%). §5.10 now reports the sweep rather than the single cell.
+
+- **KI-012 — clone rows of the head-to-head are unreported.** `whitebox_attack_results/e4hh_s042.json`
+  contains five `cloneinject_n*` rows in which RAGDefender catches 57-71% of host-anchored clones
+  against SEVA's 11-13%, at RAGDefender's 51.2% benign strip rate. The templated row of the same
+  file is reported in the paper; the clone rows are not. Unresolved editorial decision.
+
+- **KI-013 — Observation 2 is a measurement, not a rate result.** The DKW bound is 12-18x wider
+  than the realized deviation at every N, and the three measured deviations do not follow the
+  predicted 1/sqrt(n) decay (ratios 4.74 and 1.47 against 3.16). Both papers now report the
+  direction only and fit no exponent.
+
+- **KI-014 — clone paraphraser differs from the answering generator.** Host-anchored clones are
+  rewritten with `mistral:7b-instruct` because `gpt-oss:20b` loops on the rewrite prompt; the
+  answering generator and corruption judge remain `gpt-oss:20b` at temperature 0, so the potency
+  comparison holds targets, judge and criterion fixed. Now disclosed in the main text of both
+  papers, not only the supplement.
