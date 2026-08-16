@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Citation-integrity + percent-escaping + environment-balance checker for SEVA_v8.tex.
-Usage: python _tex_check.py SEVA_v8.tex"""
+"""Citation-integrity + percent-escaping + environment-balance checker for the SEVA papers.
+Usage: python _tex_check.py SEVA_tdsc.tex"""
 import sys, re
 
-path = sys.argv[1] if len(sys.argv) > 1 else "SEVA_v8.tex"
+path = sys.argv[1] if len(sys.argv) > 1 else "SEVA_tdsc.tex"
 with open(path, "r", encoding="utf-8") as f:
     raw = f.read()
 lines = raw.splitlines()

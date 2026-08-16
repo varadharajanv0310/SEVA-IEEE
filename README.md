@@ -17,7 +17,9 @@ document when `cluster_coh > τ`, with `τ` calibrated **non-oracle** (no labell
 knowledge of contamination density) to a universal false-positive target of **0.69%**, and
 flags a *query* when ≥ 2 of its retrieved documents are flagged.
 
-> The paper is `SEVA_v8.tex` (+ `SEVA_v8_supp.tex`). This repository contains the frozen
+> The paper comes in two forms: `SEVA_tdsc.tex` (+ `SEVA_tdsc_supp.tex`) is the IEEE TDSC
+> submission, and `SEVA_arxiv.tex` is a self-contained extended version with every appendix
+> and measurement folded in. This repository contains the frozen
 > detector, the deterministic reproduction toolkit, and the result files behind every
 > headline number (see [RESULTS.md](RESULTS.md)).
 
@@ -123,8 +125,9 @@ does not use.
 
 ```
 SEVA-RAG/
-├── SEVA_v8.tex                 # the paper (IEEEtran, ≤12 pp incl. references)
-├── SEVA_v8_supp.tex            # supplementary material (confusion matrices, τ tables, capability comparison)
+├── SEVA_tdsc.tex               # IEEE TDSC submission (compsoc, 12 pp incl. references)
+├── SEVA_tdsc_supp.tex          # its supplement (confusion matrices, τ tables, capability comparison)
+├── SEVA_arxiv.tex              # extended version, self-contained (single file, no external figures)
 ├── README.md  HOW_TO_REPRODUCE.md  RESULTS.md  LICENSE
 ├── requirements.txt  environment.yml  environment_5080.yml
 │
