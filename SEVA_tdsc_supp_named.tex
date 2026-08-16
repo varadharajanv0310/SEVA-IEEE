@@ -1,0 +1,466 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage[section]{placeins}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\dbltopfraction}{0.92}
+\setcounter{topnumber}{4}
+\setcounter{dbltopnumber}{4}
+
+% Supplementary sections numbered S-I, S-II, ...
+\renewcommand{\thesection}{S\Roman{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+
+\begin{document}
+
+\title{Supplementary Material for\\
+SEVA: Lightweight, LLM-Free Detection of\\
+Templated Corpus Poisoning in\\
+Retrieval-Augmented Generation}
+
+\author{V.~Varadharajan and Abishek~V.~P.~T.}
+
+\maketitle
+
+\noindent This supplement collects appendix-grade material referenced from the main
+paper: per-seed confusion matrices and per-condition detection rates
+(Section~\ref{app:confusion}), attack-construction details (Section~\ref{app:attack}),
+calibrated thresholds (Section~\ref{app:repro}), a deployment-capability comparison
+(Section~\ref{app:compare}), and supporting detection tables (Section~\ref{app:tables}). Table
+and section numbers prefixed ``S'' are internal to this supplement; unprefixed references
+point to the main paper.
+
+\section{Per-Seed Confusion Matrices}
+\label{app:confusion}
+We report complete confusion counts for every in-domain condition, the per-seed
+reporting that the primary results table of the main paper summarizes. Table~\ref{tab:confL1}
+gives the L1 (full signal set) matrices: every cell has $\mathrm{FN}=0$---no
+templated poison passage evades detection at any density or seed---which is the
+basis for the $0\%$ L1 poison-evasion. Table~\ref{tab:confL23} gives L2 and L3, the
+ablated composite, where $\mathrm{FN}>0$ is the adaptive collapse the geometric hard
+gate (main paper) eliminates. Table~\ref{tab:percond} converts these
+counts into per-condition detection rates---poison-evasion with Wilson upper bounds,
+and document- and query-level false-positive rates---for all nine conditions.
+
+\begin{table}[htbp]
+\centering
+\caption{Complete per-seed confusion matrices at L1 (full signal set), in-domain
+Security corpus. Every cell has $\mathrm{FN}=0$: the $0\%$ L1 poison-evasion reported
+in the main paper is exact, not rounded.}
+\label{tab:confL1}
+\begin{tabular}{llcccc}
+\toprule
+Density & Seed & TP & FN & FP & TN \\
+\midrule
+\multirow{3}{*}{1\%}  & 42  & 125 & 0 & 15 & 3287 \\
+                      & 7   & 125 & 0 & 24 & 3255 \\
+                      & 123 & 125 & 0 & 14 & 3222 \\
+\midrule
+\multirow{3}{*}{5\%}  & 42  & 138 & 0 & 17 & 3244 \\
+                      & 7   & 138 & 0 & 27 & 3231 \\
+                      & 123 & 138 & 0 & 17 & 3197 \\
+\midrule
+\multirow{3}{*}{10\%} & 42  & 156 & 0 & 13 & 3202 \\
+                      & 7   & 156 & 0 & 22 & 3196 \\
+                      & 123 & 156 & 0 & 15 & 3183 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Per-seed confusion at L2 and L3 (soft signals ablated), in-domain---the
+composite's adaptive collapse. The geometric hard gate (main paper)
+recovers $0\%$ poison-evasion on these same conditions.}
+\label{tab:confL23}
+\begin{tabular}{llcccc}
+\toprule
+ & & \multicolumn{2}{c}{L2} & \multicolumn{2}{c}{L3} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}
+Density & Seed & TP & FN & TP & FN \\
+\midrule
+\multirow{3}{*}{1\%}  & 42  & 71 & 54  & 70 & 55  \\
+                      & 7   & 71 & 54  & 76 & 49  \\
+                      & 123 & 68 & 57  & 70 & 55  \\
+\midrule
+\multirow{3}{*}{5\%}  & 42  & 54 & 84  & 54 & 84  \\
+                      & 7   & 70 & 68  & 70 & 68  \\
+                      & 123 & 54 & 84  & 54 & 84  \\
+\midrule
+\multirow{3}{*}{10\%} & 42  & 42 & 114 & 42 & 114 \\
+                      & 7   & 45 & 111 & 45 & 111 \\
+                      & 123 & 42 & 114 & 42 & 114 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[htbp]
+\centering
+\caption{Per-condition in-domain detection rates---all nine density$\times$seed
+conditions, the full breakdown the primary table of the main paper summarizes,
+for the full signal set (tier~L1). The evasion column gives the templated-poison
+poison-evasion rate with its $95\%$ Wilson upper bound in parentheses, computed from
+the per-condition poison-encounter count $n$; Doc-FPR and query-FPR are the
+document- and query-level false-positive rates at the $0.69\%$ non-oracle operating
+point. Poison-evasion is $0\%$ at every condition (each cell has $\mathrm{FN}=0$,
+Table~\ref{tab:confL1}); on the templated attack the deployed geometric hard gate
+coincides with the full signal set at $0\%$ poison-evasion, their divergence under adaptation
+being the subject of the geometric-core table in the main paper. The grand-mean row averages the nine
+conditions ($n=1{,}257$ pooled encounters); the high-encounter row is a dedicated
+frozen-gate run ($25{,}000$ templated encounters, $0$ evasions) tightening the
+templated-evasion upper bound to $0.0154\%$. All quantities in \%.}
+\label{tab:percond}
+\begin{tabular}{llrccc}
+\toprule
+Density & Seed & $n$ & Evasion (95\% Wilson) & Doc-FPR & query-FPR \\
+\midrule
+\multirow{3}{*}{1\%}  & 42  & 125 & $\mathbf{0.0}$\,(3.0) & 0.45 & 1.88 \\
+                      & 7   & 125 & $\mathbf{0.0}$\,(3.0) & 0.73 & 2.75 \\
+                      & 123 & 125 & $\mathbf{0.0}$\,(3.0) & 0.43 & 1.75 \\
+\midrule
+\multirow{3}{*}{5\%}  & 42  & 138 & $\mathbf{0.0}$\,(2.7) & 0.52 & 2.00 \\
+                      & 7   & 138 & $\mathbf{0.0}$\,(2.7) & 0.83 & 3.38 \\
+                      & 123 & 138 & $\mathbf{0.0}$\,(2.7) & 0.53 & 2.13 \\
+\midrule
+\multirow{3}{*}{10\%} & 42  & 156 & $\mathbf{0.0}$\,(2.4) & 0.40 & 1.63 \\
+                      & 7   & 156 & $\mathbf{0.0}$\,(2.4) & 0.68 & 2.75 \\
+                      & 123 & 156 & $\mathbf{0.0}$\,(2.4) & 0.47 & 1.88 \\
+\midrule
+\multicolumn{2}{l}{Grand mean}    & $1{,}257$  & $\mathbf{0.0}$           & 0.56 & 2.24 \\
+\multicolumn{2}{l}{High-enc.\ CI} & $25{,}000$ & $\mathbf{0.0}$\,(0.0154) & ---  & ---  \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Attack Construction}
+\label{app:attack}
+\emph{Templated poison (in-domain).} For each target query we inject multiple
+passages generated from a shared security-domain template, so the injected set for
+a query is internally homogeneous; contamination is swept at $1\%$, $5\%$, and
+$10\%$ of the corpus. \emph{Released PoisonedRAG (cross-domain).} We use the attack
+authors' published adversarial passages (PoisonedRAG) for Natural Questions
+and HotpotQA ($100$ target queries, $5$ passages each), following their released
+construction in which each passage prepends the target question to an LLM-crafted
+payload satisfying both retrieval and generation objectives; we add no
+re-implementation of our own. \emph{Adaptive adversary (L2/L3).} We model the
+keyword-dropping adversary by normalizing the soft signals at the feature
+level---keyword density at L2, keyword density and sentence-length structure at
+L3---without embedding-space optimization---gradient-based methods such as
+GCG or AutoDAN---which is the capability the geometric
+gate is built to withstand.
+
+\emph{Host-anchored clones (boundary experiment).} For each of the $50$ adversarial target
+queries we take the top-ranked benign document, rewrite it with an offline LLM
+(\texttt{mistral:7b-instruct}, temperature $0$) to preserve meaning while changing surface form,
+and splice the payload after the first sentence, truncating to $300$ words. Detection is
+LLM-free throughout; the LLM is used only for attack generation and for the answer-corruption
+check, which is judged by an offline generator (\texttt{gpt-oss:20b}, temperature $0$) counting
+payload markers in the answer with and without the clone present. A target counts as corrupted
+when the poisoned answer contains at least two payload markers and strictly more than the clean
+answer does. Cohesion for these clones is measured in the corpus the attack actually creates---
+clean documents plus the injected clones, with no templated poison present---since the two
+injection strategies are alternatives, not a combination.
+
+\section{Calibration Thresholds and Reproducibility}
+\label{app:repro}
+Table~\ref{tab:tau} lists the calibrated thresholds. The deployed geometric gate
+sits well below poison coherence ($\approx\!0.99$) and above clean
+($\approx\!0.75$) on every corpus. All results use BAAI/bge-large-en-v1.5
+($1024$-d, $\ell_2$-normalized) with a FAISS HNSW index ($M=32$,
+$\mathrm{efConstruction}=200$); cluster coherence uses $K=5$ with
+$K_{\mathrm{FETCH}}=20$ over-fetch. In-domain runs use calibration seeds $42$, $7$,
+$123$ over $2{,}000$ benign queries split $60/40$ between calibration and
+evaluation, at a $0.0069$ false-positive target throughout. Cross-platform
+reproduction---identical detection across CUDA and Apple-Silicon backends on this
+byte-identical hash-verified corpus---is reported in the main paper.
+Per-condition
+artifacts (confusion counts, thresholds, latencies) are recorded per seed and
+density.
+
+\begin{table}[htbp]
+\centering
+\caption{Calibrated thresholds. The geometric gate (deployed) and the composite
+tiers (ablation), in-domain ranges shown across $1$--$10\%$ density.}
+\label{tab:tau}
+\begin{tabular}{lc}
+\toprule
+Detector / corpus & $\tau$ \\
+\midrule
+Geometric gate --- Security (in-domain) & $\approx 0.84$ \\
+Geometric gate --- Natural Questions    & $0.832$ \\
+Geometric gate --- HotpotQA             & $0.804$ \\
+Composite L1 --- Security ($1\%\!\to\!10\%$) & $0.58 \to 0.64$ \\
+Composite L2 --- Security               & $0.67 \to 0.77$ \\
+Composite L3 --- Security               & $0.69 \to 0.77$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Defense Capability Comparison}
+\label{app:compare}
+Table~\ref{tab:caps} positions SEVA against the defenses PoisonedRAG and its
+successors evaluate, by deployment capability rather than by lifted attack-success
+numbers (which the head-to-head of the main paper replaces with a
+reproduced measurement). SEVA is the only entry that is simultaneously LLM-free,
+decoder-free, registration-free, corpus-level, and evaluated across the $1$--$10\%$
+density band.
+
+\begin{table}[htbp]
+\centering
+\caption{Deployment-capability comparison (factual properties of each defense, per
+its publication; not lifted ASR numbers). $\checkmark$ = property held.}
+\label{tab:caps}
+\begin{tabular}{lccccc}
+\toprule
+Defense & \rotatebox{90}{LLM-free\,} & \rotatebox{90}{No decoder\,} &
+\rotatebox{90}{No pre-reg.\,} & \rotatebox{90}{Corpus-level\,} & Density \\
+\midrule
+RobustRAG    & $\times$\,($5\times$) & $\checkmark$ & $\checkmark$ & $\times$ & $\sim$0.001\% \\
+AV Filter    & $\times$ & $\times$ & $\checkmark$ & $\times$ & $\sim$0.001\% \\
+RAGShield    & $\checkmark$ & $\checkmark$ & $\times$ & --- & $\sim$0.001\% \\
+RAGDefender  & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\times$ & $\sim$1\% \\
+\textbf{SEVA (ours)}          & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & \textbf{1--10\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Supporting Detection Tables}
+\label{app:tables}
+Table~\ref{tab:roc} reports the matched-FPR catch-rate sweep underlying the
+corpus-fragility result (main paper, ``Lexical Duplicate Filtering Is Corpus-Fragile''):
+the headline operating-point numbers appear in the main paper's cross-domain table, and
+the sweep here shows lexical filtering catching nothing below a $2\%$ false-positive rate
+while cluster coherence catches the attack at the $0.69\%$ operating point. Table~\ref{tab:agg}
+reports the per-query aggregation that, by requiring $\geq\!2$ flagged documents per query,
+cuts the benign query-level false-positive rate $3.2\times$ at no cost to catch rate.
+
+\begin{table}[htbp]
+\centering
+\caption{Matched-FPR catch rate of the released PoisonedRAG attack on Natural
+Questions and HotpotQA as the operating false-positive rate is swept, for cluster
+coherence (ours), lexical MinHash, and embedding $s_{nd}$. Lexical filtering catches
+nothing on these duplicate-rich benchmarks at any deployable FPR below $2\%$; cluster coherence
+catches the attack at the $0.69\%$ operating point on both.}
+\label{tab:roc}
+\begin{tabular}{llccc}
+\toprule
+Corpus & FPR & \texttt{cluster\_coh} & MinHash & $s_{nd}$ \\
+\midrule
+\multirow{4}{*}{Natural Questions}
+ & 0.5\%  & 70\% & 0\%   & 30\% \\
+ & 0.69\% & \textbf{82\%} & 0\% & 52\% \\
+ & 1\%    & 92\% & 0\%   & 74\% \\
+ & 2\%    & 98\% & 100\% & 95\% \\
+\midrule
+\multirow{4}{*}{HotpotQA}
+ & 0.5\%  & 95\%  & 0\% & 97\% \\
+ & 0.69\% & \textbf{97\%} & 0\% & 98\% \\
+ & 1\%    & 100\% & 0\% & 99\% \\
+ & 2\%    & 100\% & 0\% & 100\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Per-query aggregation on the PoisonedRAG corpus (same $0.69\%$ document
+threshold). Requiring $\geq\!2$ flagged documents per query exploits the attack's
+multi-passage structure to cut the benign query-level false-positive rate
+$3.2\times$ at no cost to catch rate.}
+\label{tab:agg}
+\begin{tabular}{lcc}
+\toprule
+Aggregation rule & Benign query-FPR & Poison catch \\
+\midrule
+$\geq\!1$ flagged & 3.15\% & 98.0\% \\
+$\geq\!2$ flagged & \textbf{0.90\%} & \textbf{98.0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Signal Inventory (Composite Ablation)}
+\label{app:signals}
+Table~\ref{tab:signals} is the ten-signal inventory underlying the composite ablation of the
+main paper: only cluster coherence combines a high in-domain SNR with robustness to both the
+domain-confound control and adaptive normalization.
+
+\begin{table}[htbp]
+\centering
+\caption{In-domain signal inventory (Security Stack Exchange, seed~42, $1\%$
+density). Only cluster coherence combines a high SNR with robustness to both the
+domain-confound control and adaptive normalization; the soft signals are weak
+in-domain, and the strongest of them (keyword density) is both confounded
+(SNR~$38.4\!\to\!8.1$ against a general-domain corpus) and adversary-normalizable.
+SEVA deploys the geometric signal alone; the rest are the ablation.}
+\label{tab:signals}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llc>{\raggedright\arraybackslash}p{2.1cm}}
+\toprule
+Signal & Type & In-domain SNR & Status \\
+\midrule
+\texttt{cluster\_coh}  & geometric  & $5.99$  & \textbf{deployed} \\
+\texttt{kw\_density}   & keyword    & $8.10$  & confounded, normalizable (L2) \\
+\texttt{sent\_unif}    & structural & $1.40$  & ablated \\
+\texttt{topic\_drift}  & semantic   & $1.18$  & ablated \\
+\texttt{punct}         & structural & $1.04$  & ablated \\
+\texttt{doc\_length}   & structural & $0.92$  & ablated \\
+\texttt{avg\_sent\_len} & structural & $0.53$  & normalizable (L3) \\
+\texttt{content\_ttr}  & lexical    & $-1.09$ & ablated \\
+\texttt{ttr}           & lexical    & $-1.12$ & ablated \\
+\texttt{repeat\_rate}  & lexical    & $-0.48$ & excluded \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Geometric Core vs.\ Composite}
+\label{app:core}
+Table~\ref{tab:core} accompanies the geometric-core discussion of the main paper: the composite
+matches the hard gate on the naive attack, dilutes detection on real PoisonedRAG, and collapses
+under the keyword-dropping adversary, while the hard gate holds.
+
+\begin{table}[htbp]
+\centering
+\caption{The geometric core vs.\ the multi-signal composite (the ablation), at
+$0.69\%$ non-oracle document-FPR, by poison-evasion rate (lower is better). The
+composite equals the hard gate on the naive attack, but the soft signals dilute
+detection on real PoisonedRAG and collapse under the keyword-dropping adversary,
+while the geometric hard gate holds.}
+\label{tab:core}
+\begin{tabular}{lcc}
+\toprule
+\multirow{2}{*}{Attack} & \texttt{cluster\_coh} & 10-signal \\
+       & hard gate & composite \\
+\midrule
+Templated (held-out)    & \textbf{0\%} & 0\% \\
+Real PoisonedRAG        & \textbf{2\%} & 28\% \\
+Adaptive (keyword-drop) & \textbf{0\%} & 49--57\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Cross-Platform Reproduction}
+\label{app:xplat}
+Per-platform detail for the cross-platform reproduction reported in the main paper: identical detection across CUDA and Apple-Silicon backends on the byte-identical hash-verified corpus.
+
+\begin{table*}[htbp]
+\centering
+\caption{Cross-platform reproduction on a byte-identical, hash-verified corpus (SHA-256
+\texttt{28ec3811}$\dots$): \emph{identical} detection across CUDA and Apple-Silicon
+backends---the gap, SNR, and $0\%$ templated poison-evasion match on every platform,
+density, and seed (the two re-embedded external machines agree on the gap to within
+$5\times10^{-7}$)---at $13$--$38$\,ms per query.}
+\label{tab:xplat}
+\begin{tabular}{llcccc}
+\toprule
+Platform & Backend & Gap ($1$--$10\%$) & SNR & Templ.\ evasion & Latency mean/p95 \\
+\midrule
+RTX 5080 (desktop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $13.4$--$15.7$\,/\,$\le\!18.8$\,ms \\
+RTX 4060 (laptop) & CUDA & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $38.1$\,/\,$43.6$\,ms \\
+Apple M4 (laptop) & MPS & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ & $28.1$\,/\,$37.3$\,ms \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Encoder-Invariance Detail}
+\label{app:encoder}
+Per-encoder detail for Observation~3 of the main paper: the geometric gate under three embedding lineages on the identical hash-verified in-domain corpus, each calibrated non-oracle in its correct symmetric convention.
+
+\begin{table*}[htbp]
+\centering
+\caption{Encoder-invariance: the geometric gate across three embedding lineages on the
+identical hash-verified in-domain corpus, each calibrated non-oracle in its correct
+symmetric convention. Templated poison-evasion is $0\%$ for all three; the absolute gap
+shrinks only as the clean manifold concentrates (clean coherence $0.751\!\to\!0.881$),
+while the scale-normalized SNR holds. Values span $1$--$10\%$ density.}
+\label{tab:encoder}
+\begin{tabular}{llccccc}
+\toprule
+Encoder & Lineage & Clean coh. & Poison coh. & Gap & SNR & Templ.\ evasion \\
+\midrule
+bge-large   & BAAI      & $0.751$ & $0.990$ & $+0.236$ to $+0.245$ & $5.9$--$6.1$ & $\mathbf{0\%}$ \\
+e5-large-v2 & Microsoft & $0.866$ & $0.990$ & $+0.122$ to $+0.127$ & $6.4$--$6.7$ & $\mathbf{0\%}$ \\
+gte-large   & Alibaba   & $0.881$ & $0.996$ & $+0.113$ to $+0.117$ & $5.2$--$5.3$ & $\mathbf{0\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Reproduced Head-to-Head Detail}
+\label{app:h2h}
+Per-defense detail for the reproduced, shared-corpus, matched-FPR head-to-head of the main paper.
+
+\begin{table*}[htbp]
+\centering
+\caption{Reproduced head-to-head against the per-query state of the art on a
+shared Security corpus and templated attack. RAGDefender uses SEVA's encoder
+(bge-large), isolating the algorithmic difference; its native filter has no
+no-attack gate and removes half of all clean documents, so the catch comparison
+is made at a matched $\sim$0.8\% benign-FPR operating point (looser than SEVA's own
+$\sim$0.6\%) using a best-case idealized threshold in RAGDefender's favour.}
+\label{tab:h2h}
+\begin{tabular}{lcc}
+\toprule
+\multirow{2}{*}{Defense} & Templated catch & Native benign \\
+        & @ matched $\sim$0.8\% FPR & doc-FPR \\
+\midrule
+SEVA & \textbf{100\%} & $\sim$0.6\% \\
+RAGDefender & $\sim$89\% & 50.4\% \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Million-Document Scale Detail}
+\label{app:scale}
+Per-density detail for the million-document scale validation reported in the main paper.
+
+\begin{table*}[htbp]
+\centering
+\caption{Validation at million-document scale: $N=1{,}000{,}000$, a broader hash-gated
+technical corpus (SHA-256 \texttt{317eb43c}$\dots$---\emph{distinct} from the
+cross-platform corpus of the main paper). Latency is $15.0$\,ms mean / $18.2$\,ms p95,
+of which retrieval and gate are $\approx\!0.4$\,ms (sub-millisecond at $10\times$ scale);
+poison-evasion is $0\%$, the gap density-invariant, and the non-oracle document-FPR
+$0.70\%$. The poison budget fills $1\%$ and $5\%$; $10\%$ exceeds it. Three seeds.}
+\label{tab:scale}
+\begin{tabular}{lccccc}
+\toprule
+Density & $n_{\mathrm{poison}}$ & Gap & SNR & Evasion & Doc-FPR \\
+\midrule
+$1\%$ & $10{,}000$ & $+0.245$ & $5.63$ & $\mathbf{0\%}$ & $0.68\%$ \\
+$5\%$ & $50{,}000$ & $+0.249$ & $5.57$ & $\mathbf{0\%}$ & $0.72\%$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Cross-Domain Detection Detail}
+\label{app:xdomain}
+Per-corpus detail for the cross-domain results reported in the main paper: cluster coherence against lexical MinHash and embedding near-duplicate detection at the matched non-oracle operating point.
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-domain detection of the PoisonedRAG attack at the $0.69\%$ non-oracle
+operating point (released poison on Natural Questions and HotpotQA; a faithful black-box
+build on Security). \texttt{cluster\_coh} catches the attack on all three corpora
+(``Evasion'' is the residual it misses, a detection metric); lexical MinHash filtering is
+corpus-fragile, while embedding deduplication ($s_{nd}$) is competitive. ``Benign dup.''\
+is the fraction of clean documents sharing a 5-gram.}
+\label{tab:xdomain}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+\multirow{2}{*}{Corpus} & Benign & \texttt{cluster\_coh} & MinHash & $s_{nd}$ & Poison \\
+       & dup. & (ours) & (lexical) & (embed.) & evasion \\
+\midrule
+Security SE       & 0.24\% & \textbf{98\%} & 98\% & 98\% & 2\% \\
+Natural Questions & 1.15\% & \textbf{82\%} & 0\%  & 52\% & 18\% \\
+HotpotQA          & 9.06\% & \textbf{97\%} & 0\%  & 98\% & 3\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\end{document}
