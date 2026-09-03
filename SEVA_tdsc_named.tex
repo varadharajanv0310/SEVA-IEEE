@@ -35,7 +35,9 @@ Templated Corpus Poisoning in\\
 Retrieval-Augmented Generation}
 
 \author{V.~Varadharajan and Abishek~V.~P.~T.%
-\IEEEcompsocitemizethanks{\IEEEcompsocthanksitem Both authors are independent researchers. E-mail: vv0366@srmist.edu.in}}
+\IEEEcompsocitemizethanks{\IEEEcompsocthanksitem Manuscript received XX XXX 2026; revised XX XXX 2026.\protect\\
+V. Varadharajan and Abishek V. P. T. are independent researchers.\protect\\
+Corresponding author: V. Varadharajan (e-mail: vv0366@srmist.edu.in).}}
 
 \maketitle
 
@@ -878,24 +880,6 @@ exponent, and do not extrapolate beyond $10^{6}$.
 \subsection{Encoder-Invariance}
 \label{subsec:encoder}
 
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=\columnwidth, height=4.1cm,
-  xlabel={contamination density (\%)}, ylabel={\texttt{cluster\_coh} gap},
-  xmin=0, xmax=11, ymin=0.09, ymax=0.42, xtick={1,5,10},
-  legend pos=north west, legend columns=1, tick label style={font=\scriptsize}, label style={font=\scriptsize}, legend style={font=\scriptsize, draw=none, fill=none}, grid=both, grid style={line width=.2pt, draw=gray!20}]
-\addplot[thick, blue!60!black, mark=*] coordinates {(1,0.2363) (5,0.2408) (10,0.2445)};
-\addlegendentry{bge-large (SNR $\geq$ 5.93)}
-\addplot[thick, orange!80!black, mark=square*] coordinates {(1,0.1223) (5,0.1246) (10,0.1266)};
-\addlegendentry{e5-large-v2 (SNR $\geq$ 6.43)}
-\addplot[thick, green!40!black, mark=triangle*] coordinates {(1,0.1130) (5,0.1150) (10,0.1166)};
-\addlegendentry{gte-large (SNR $\geq$ 5.21)}
-\end{axis}
-\end{tikzpicture}
-\caption{Encoder-invariance across three independent pre-training lineages. Each encoder is flat in density (relative gap range $\le 0.035$) and reaches $0\%$ templated poison-evasion, but the \emph{absolute} separation is encoder-dependent (bge $\approx 0.24$; e5 $\approx 0.12$; gte $\approx 0.11$). What generalizes is that the gate works, not that the margin is the same size on every manifold.}
-\label{fig:encoder}
-\end{figure}
 The cluster-coherence signal reads similarities in one embedding model's space, so a
 fair worry is that it detects that model's idiosyncrasies rather than the attack. It
 does not.
@@ -1294,10 +1278,14 @@ injections that leave no duplication footprint, without an LLM, remains open.
 attack construction, calibrated thresholds, per-encoder and per-platform detail, and the
 capability comparison are provided separately.
 
+\section*{Acknowledgments}
+\emph{Use of AI in the experiments.} Two locally hosted open-weight models generated and judged experimental data; neither is part of the detector. \texttt{mistral:7b-instruct} rewrote host-anchored clone passages (\S\ref{subsec:boundary}); \texttt{gpt-oss:20b} at temperature $0$ judged answer corruption end to end. Data so generated is labelled as such in the released artifacts. SEVA itself calls no language model.
+\emph{Financial support.} This research received no external grant funding. \emph{Conflicts of interest.} The authors declare none. \emph{Data and code availability.} The frozen detector, reproduction toolkit, generated clone datasets, and a result file behind every headline number are available at \url{https://github.com/varadharajanv0310/SEVA-IEEE}; corpora and poison are gated by order-sensitive SHA-256 hashes recorded in each result file, so a reproduction that does not match fails closed rather than diverging silently.
+
 \bibliographystyle{IEEEtran}
 \begin{thebibliography}{99}
 \bibitem{poisonedrag} W. Zou, R. Geng, B. Wang, and J. Jia, ``PoisonedRAG: Knowledge corruption attacks to retrieval-augmented generation of large language models,'' in \emph{Proc. 34th USENIX Security Symposium}, 2025.
-\bibitem{avfilter} S. Choudhary, N. Palumbo, A. Hooda \emph{et al.}, ``Through the stealth lens: Rethinking attacks and defenses in RAG,'' 2025.
+\bibitem{avfilter} S. Choudhary, N. Palumbo, A. Hooda \emph{et al.}, ``Through the stealth lens: Rethinking attacks and defenses in RAG,'' \emph{arXiv preprint} arXiv:2506.04390, 2025.
 \bibitem{robustrag} C. Xiang, T. Wu, Z. Zhong \emph{et al.}, ``Certifiably robust RAG against retrieval corruption,'' in \emph{ICML Workshop on the Next Generation of AI Safety}, 2024. arXiv:2405.15556.
 \bibitem{ragdefender} M. Kim, H. Lee, and H. Koo, ``Rescuing the unpoisoned: Efficient defense against knowledge corruption attacks on RAG systems,'' in \emph{Annual Computer Security Applications Conference (ACSAC)}, 2025.
 \bibitem{cleanbase} W. Jin, X. Wang, W. Zou \emph{et al.}, ``CleanBase: Detecting malicious documents in RAG knowledge databases,'' arXiv preprint arXiv:2605.00460, 2026.
@@ -1310,8 +1298,8 @@ capability comparison are provided separately.
 \bibitem{ragpart} P. Pathmanathan, M.-A. Panaitescu-Liess, C.-Y. J. Chiang, and F. Huang, ``RAGPart \& RAGMask: Retrieval-stage defenses against corpus poisoning in retrieval-augmented generation,'' in \emph{AAAI Workshop on New Frontiers in Information Retrieval}, 2026. arXiv:2512.24268.
 \bibitem{catpoison} H. Mei, Z. Du, C. Cai \emph{et al.}, ``CatPoison: Category-oriented knowledge poisoning attacks in retrieval-augmented generation systems,'' in \emph{IEEE TrustCom}, 2025.
 \bibitem{ragshield} K. Patil, ``RAGShield: Provenance-verified defense-in-depth against knowledge base poisoning in government retrieval-augmented generation systems,'' arXiv preprint arXiv:2604.00387, 2026.
-\bibitem{bge} S. Xiao, Z. Liu, P. Zhang, and N. Muennighoff, ``C-Pack: Packed resources for general Chinese embeddings,'' 2023.
-\bibitem{faiss} M. Douze, A. Guzhva, C. Deng \emph{et al.}, ``The FAISS library,'' 2024.
+\bibitem{bge} S. Xiao, Z. Liu, P. Zhang, and N. Muennighoff, ``C-Pack: Packed resources for general Chinese embeddings,'' in \emph{Proc. 47th Int. ACM SIGIR Conf. on Research and Development in Information Retrieval}, 2024, pp. 641--649, arXiv:2309.07597.
+\bibitem{faiss} M. Douze, A. Guzhva, C. Deng \emph{et al.}, ``The FAISS library,'' \emph{arXiv preprint} arXiv:2401.08281, 2024.
 \bibitem{hnsw} Y. A. Malkov and D. A. Yashunin, ``Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs,'' \emph{IEEE Trans. Pattern Anal. Mach. Intell.}, vol. 42, no. 4, pp. 824--836, 2020.
 \bibitem{wikitext} S. Merity, C. Xiong, J. Bradbury \emph{et al.}, ``Pointer sentinel mixture models,'' in \emph{Int. Conf. on Learning Representations (ICLR)}, 2017.
 \bibitem{minhash} A. Z. Broder, ``On the resemblance and containment of documents,'' in \emph{Proc. Compression and Complexity of Sequences}, 1997, pp. 21--29.
