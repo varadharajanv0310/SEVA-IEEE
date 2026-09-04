@@ -1,6 +1,6 @@
 # SEVA: Lightweight, LLM-Free Detection of Templated Corpus Poisoning in RAG
 
-[![CI](https://github.com/varadharajanv0310/SEVA-RAG/actions/workflows/ci.yml/badge.svg)](https://github.com/varadharajanv0310/SEVA-RAG/actions/workflows/ci.yml)
+[![CI](https://github.com/varadharajanv0310/SEVA-IEEE/actions/workflows/ci.yml/badge.svg)](https://github.com/varadharajanv0310/SEVA-IEEE/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **SEVA** is a fully local, **LLM-free** detector of corpus-poisoning attacks against
@@ -201,7 +201,7 @@ with the MPS backend (Apple M4) — detection is byte-identical across all three
 and `reproduction/requirements_install.md` for per-platform notes.
 
 ```bash
-git clone https://github.com/varadharajanv0310/SEVA-RAG.git
+git clone https://github.com/varadharajanv0310/SEVA-IEEE.git
 cd SEVA-RAG
 conda env create -f environment.yml      # or: conda create -n seva python=3.11 && pip install -r requirements.txt
 conda activate seva
@@ -236,7 +236,7 @@ documented corpus/poison hashes for identity verification.
   title  = {SEVA: Lightweight, LLM-Free Detection of Templated Corpus Poisoning in Retrieval-Augmented Generation},
   author = {V. Varadharajan},
   year   = {2026},
-  url    = {https://github.com/varadharajanv0310/SEVA-RAG}
+  url    = {https://github.com/varadharajanv0310/SEVA-IEEE}
 }
 ```
 

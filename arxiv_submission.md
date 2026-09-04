@@ -31,7 +31,7 @@ are pgfplots/TikZ; there are no external image dependencies. Upload the `.tex` a
 ## Comments field (suggested)
 
 Extended version. 19 pages, 11 figures, 25 tables. Artifacts and reproduction scripts:
-https://github.com/varadharajanv0310/SEVA-RAG
+https://github.com/varadharajanv0310/SEVA-IEEE
 
 ## Authors (as they appear on the paper)
 
