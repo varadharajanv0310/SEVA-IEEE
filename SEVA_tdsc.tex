@@ -29,6 +29,14 @@
 \setcounter{totalnumber}{6}
 \setcounter{dbltopnumber}{4}
 
+% ---------------------------------------------------------------------------
+% Anonymous artifact link for double-blind review.
+% Mint a mirror at https://anonymous.4open.science (sign in with GitHub, point it
+% at varadharajanv0310/SEVA-IEEE, set an expiry past the review period) and replace
+% the default below with \url{...}. Nothing else needs to change.
+% ---------------------------------------------------------------------------
+\newcommand{\ANONREPO}{[anonymized repository link; a read-only mirror is provided to reviewers via the editorial office]}
+
 \begin{document}
 
 \title{SEVA: Lightweight, LLM-Free Detection of\\
@@ -1280,7 +1288,7 @@ capability comparison are provided separately.
 
 \section*{Acknowledgments}
 \textbf{Use of AI in the experiments:} Two locally hosted open-weight models generated and judged experimental data; neither is part of the detector. \texttt{mistral:7b-instruct} rewrote host-anchored clone passages (\S\ref{subsec:boundary}); \texttt{gpt-oss:20b} at temperature $0$ judged answer corruption end to end. Data so generated is labelled as such in the released artifacts. SEVA itself calls no language model.
-\textbf{Financial support:} This research received no external grant funding. \textbf{Conflicts of interest:} The authors declare none. \textbf{Data and code availability:} The frozen detector, reproduction toolkit, generated clone datasets, and a result file behind every headline number are available at [anonymized repository link supplied to reviewers on request]; corpora and poison are gated by order-sensitive SHA-256 hashes recorded in each result file, so a reproduction that does not match fails closed rather than diverging silently.
+\textbf{Financial support:} This research received no external grant funding. \textbf{Conflicts of interest:} The authors declare none. \textbf{Data and code availability:} The frozen detector, reproduction toolkit, generated clone datasets, and a result file behind every headline number are available at \ANONREPO{}; corpora and poison are gated by order-sensitive SHA-256 hashes recorded in each result file, so a reproduction that does not match fails closed rather than diverging silently.
 
 \bibliographystyle{IEEEtran}
 \begin{thebibliography}{99}
