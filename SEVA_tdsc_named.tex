@@ -41,45 +41,24 @@ Retrieval-Augmented Generation}
 \maketitle
 
 \begin{abstract}
-Retrieval-Augmented Generation (RAG) systems are vulnerable to corpus
-poisoning---adversarial document injection that corrupts retrieval without
-modifying model weights or triggering lexical filters. Existing defenses
-require LLM decoder access, multiplicative inference overhead, or cryptographic
-pre-registration, making them impractical for the on-device, offline deployment
-that local AI increasingly demands. We present SEVA, a fully local, LLM-free
-detector built on a single geometric signal---per-document $K$-nearest-neighbour
-cluster coherence (\texttt{cluster\_coh})---operated as a hard gate, targeting
-templated multi-passage poisoning, the dominant published attack pattern
-(PoisonedRAG). In-domain, where clean and poison share the \emph{same} security domain
-and a geometric signal has no topic shortcut, SEVA drives templated poison-evasion to
-0\% across three seeds---a 95\% Wilson upper bound of 0.0154\% from 25{,}000 templated
-encounters at the frozen gate---at a 0.56\% document-level false-positive rate, under
-frozen non-oracle calibration and 1--10\% contamination density. On PoisonedRAG's
-\emph{own released} poison for the field's general-domain benchmarks (Natural Questions,
-HotpotQA), and a faithful black-box build on the in-domain Security corpus, it catches
-the attack at 82--98\%, while the lexical duplicate filtering PoisonedRAG itself found
-insufficient proves corpus-fragile at matched false-positive rate. End to end the gate prevents
-all the corruption it detects: the templated attack corrupts 22\% of targets undefended and 0\%
-with the gate in the loop. We then delimit the assumption it rests on. \emph{Host-anchored
-cloning}---one benign host mimicked per injected passage---evades the gate on every target while
-staying retrievable, no complementary geometric signal we tested closes the gap, and the bypass
-is not expensive: it corrupts 26--28\% of targets, more than the templated attack achieves
-undefended. Reproducing CleanBase, the closest corpus-level peer, at a matched operating point
-yields the same pattern (100\% templated, 0\% clones), so the boundary belongs to the shared
-mutual-similarity assumption rather than to our statistic. The signal is \emph{encoder-invariant}---%
-templated-poison detection generalizes across three embedding models of independent
-lineages, bge (BAAI), e5 (Microsoft), and gte (Alibaba)---and \emph{reproducible to
-within $5\times10^{-7}$} across two accelerator backends (CUDA and Apple Silicon) on a
-byte-identical, hash-verified corpus. Detection stays flat
-to a million documents (sub-millisecond retrieval-plus-gate cost at $10\times$ the primary
-corpus, the $O(\log N)$ claim measured, not extrapolated), and SEVA runs in $13$--$38$\,ms
-per query with no LLM, API, or pre-registration; in a reproduced, shared-corpus,
-matched-FPR head-to-head it catches 100\% of templated poison to the per-query state of
-the art's $\sim$89\%, which that baseline reaches only at a false-positive rate that
-discards roughly half the clean corpus. SEVA is deliberately scoped to one dominant attack
-family---templated multi-passage injection---and defended across domains, adaptive adversaries,
-encoders, and hardware; within that scope it is, to our knowledge, the first cohesion-based
-detector whose operating envelope and failure boundary are both measured rather than assumed.
+Retrieval-Augmented Generation relocates a system's factual authority into a corpus an
+adversary may be able to write to. Existing defenses require
+LLM decoder access, multiplicative inference overhead, or cryptographic
+pre-registration, none of which offline on-device deployment can pay. We present SEVA,
+a fully local, LLM-free detector built on one geometric signal, per-document
+K-nearest-neighbour cluster coherence, operated as a hard gate against templated
+multi-passage poisoning. In-domain, where clean and poison share a security domain so
+no topic shortcut exists, SEVA drives templated poison-evasion to zero across three
+seeds at a 0.56 percent document-level false-positive rate under frozen, non-oracle
+calibration, and catches PoisonedRAG's released poison at 82 to 98 percent across three
+corpora. End to end the gate removes all the corruption it detects. We then delimit the
+assumption it rests on. Host-anchored cloning evades the gate on every target while
+remaining retrievable, no complementary geometric signal we tested closes the gap, and
+the bypass is cheap. Reproducing CleanBase at a matched operating point yields
+the same pattern, placing the boundary in the mutual-similarity assumption the
+detection family shares rather than in our statistic. Detection is encoder-invariant,
+reproducible across backends, flat to one million documents, at 13 to 38 milliseconds
+per query.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -1318,20 +1297,5 @@ capability comparison are provided separately.
 \bibitem{e5} L. Wang, N. Yang, X. Huang \emph{et al.}, ``Text embeddings by weakly-supervised contrastive pre-training,'' arXiv preprint arXiv:2212.03533, 2022.
 \bibitem{gte} Z. Li, X. Zhang, Y. Zhang \emph{et al.}, ``Towards general text embeddings with multi-stage contrastive learning,'' arXiv preprint arXiv:2308.03281, 2023.
 \end{thebibliography}
-
-\vfill
-
-% ---------------------------------------------------------------------------
-% TODO(author): IEEE Computer Society style expects a short biography per author
-% for the FINAL version (roughly 100 words each, photo optional). Fill these in
-% or delete the block if the submission version does not require them.
-% ---------------------------------------------------------------------------
-\begin{IEEEbiographynophoto}{V. Varadharajan}
-TODO: biography.
-\end{IEEEbiographynophoto}
-
-\begin{IEEEbiographynophoto}{Abishek V. P. T.}
-TODO: biography.
-\end{IEEEbiographynophoto}
 
 \end{document}

@@ -1,8 +1,8 @@
 # Cover letter — TDSC submission
 
-Paste the body below into the portal's cover-letter field. It is written for the
-double-blind case (no author names). If the portal turns out to be single-blind, add
-your names and affiliation to the sign-off.
+Paste the body below into the portal's cover-letter field. TDSC is single-anonymous --
+the guidelines list it among the Transactions that do not offer double-anonymous review
+-- so the letter is signed.
 
 ---
 
@@ -50,10 +50,10 @@ the gate is expensive; three separate measurements contradicted it. We report th
 repair and the retraction because a reader deciding whether to deploy a cohesion gate
 needs them more than another confirmatory table.
 
-**Artifacts.** Every headline number maps to a committed result file. Corpora and
-injected poison are gated by order-sensitive SHA-256 hashes recorded in each result file,
-so a reproduction that does not match the published corpus fails closed rather than
-diverging silently. The repository link in the Acknowledgments is anonymized for review.
+**Artifacts.** Every headline number maps to a committed result file at
+https://github.com/varadharajanv0310/SEVA-IEEE. Corpora and injected poison are gated by
+order-sensitive SHA-256 hashes recorded in each result file, so a reproduction that does
+not match the published corpus fails closed rather than diverging silently.
 
 **Disclosures.** The work received no external grant funding and the authors declare no
 conflicts of interest. Two locally hosted open-weight language models were used to
@@ -66,4 +66,6 @@ separate file. It is not under consideration elsewhere.
 Thank you for your time and consideration.
 
 Sincerely,
-The Authors
+
+V. Varadharajan (corresponding author)
+Abishek V. P. T.
